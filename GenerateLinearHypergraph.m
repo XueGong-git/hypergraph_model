@@ -100,13 +100,15 @@ end
 W3 = W3 + W3';
 
 % 2-d scatter plot for edges
-scatter(E2(:,1),E2(:,2),'black','filled')
+s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none')
+alpha(s,0.3) % transparent color
 set(gca,'fontsize',30);
 ax = gca;
 exportgraphics(ax,strcat('plots/linear_hygraph_edges_', data_shape,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 % 3-d scatter plot for triangle
-scatter3(E3(:,1),E3(:,2),E3(:,3),'black','filled')
+s=scatter3(E3(:,1),E3(:,2),E3(:,3),'MarkerFaceColor','black','MarkerEdgeColor','none')
+alpha(s,0.3) % transparent color
 set(gca,'fontsize',30);
 ax = gca;
 exportgraphics(ax,strcat('plots/linear_hygraph_triangles_', data_shape,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 

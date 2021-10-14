@@ -9,14 +9,14 @@
 %
 % OUTPUTS
 % - (A2, A3)       Hypergraph -- with a matrix + a tensor
-
+tic
 clear
 
 
-n = 25;
+n = 100;
 K = 5; % number of clusters 
-a = 1; % noise;
 m = n/K; % number of node per cluster
+a = 0.2*m; % noise;
 I = zeros(n);
 f = zeros(n);
 
@@ -24,8 +24,8 @@ c2 = 1/2; % weight of simple edge
 c3 = 1/3; % weight of simple edge
 
 
-for input = 1:3
-    for gamma = 5
+for input = 2
+    for gamma = [0.025]
         
         switch input
     
@@ -64,3 +64,4 @@ for input = 1:3
 
     end
 end
+toc
