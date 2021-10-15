@@ -11,7 +11,7 @@
 % OUTPUTS
 % - (A2, A3)       Hypergraph -- with a matrix + a tensor
 
-function [W2, W3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_shape)
+function [W2, W3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type)
 
 n = length(x);
 K = 5; % number of clusters 
@@ -104,21 +104,21 @@ s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none')
 alpha(s,0.3) % transparent color
 set(gca,'fontsize',30);
 ax = gca;
-exportgraphics(ax,strcat('plots/linear_hygraph_edges_', data_shape,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/linear_hygraph_edges_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 % 3-d scatter plot for triangle
 s=scatter3(E3(:,1),E3(:,2),E3(:,3),'MarkerFaceColor','black','MarkerEdgeColor','none')
 alpha(s,0.3) % transparent color
 set(gca,'fontsize',30);
 ax = gca;
-exportgraphics(ax,strcat('plots/linear_hygraph_triangles_', data_shape,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/linear_hygraph_triangles_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 % plot 2nd order adjacency matrix
 imagesc(W2,[0,1]); %plot color map of original matrix
 colormap(flipud(gray(2)));
 set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
-exportgraphics(ax,strcat('plots/linear_hygraph_W2_', data_shape,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/linear_hygraph_W2_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 
 % plot 3rd order adjacency matirx
@@ -126,7 +126,7 @@ imagesc(W3); % plot color map of original matrix
 colormap(flipud(gray(256)));colorbar
 set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
-exportgraphics(ax,strcat('plots/linear_hygraph_W3_', data_shape,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/linear_hygraph_W3_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 
 end

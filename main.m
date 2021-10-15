@@ -17,11 +17,11 @@ n = 100;
 K = 5; % number of clusters 
 m = n/K; % number of node per cluster
 a = 0.2*m; % noise;
-I = zeros(n);
-f = zeros(n);
+
 
 c2 = 1/2; % weight of simple edge
 c3 = 1/3; % weight of simple edge
+
 
 
 for input = 2
@@ -31,17 +31,17 @@ for input = 2
     
         case 1 
             x = linspace(1,n,n);
-            data_shape = "uniform";
+            data_type = "uniform";
         case 2 
             x = sort(repmat(linspace(n/K,n,K),1,m)+(2*a*rand(1,n)-a)); % trophic levels
-            data_shape = "cluster";
+            data_type = "cluster";
         case 3
             x = linspace(0,0,n); %overlapping x
-            data_shape = "overlap";
+            data_type = "overlap";
         end
 
         
-        [W2, W3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_shape);
+        [W2, W3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
         
         %shuffle input adjacency matrix
         idx_rand = randperm(size(W2,1));% shuffle the nodes
@@ -60,7 +60,7 @@ for input = 2
         ylabel('x*','FontSize', 13);
         set(gca,'fontsize',30);
         ax = gca;
-        exportgraphics(ax,strcat('plots/linear_hygraph_embedding_', data_shape,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+        exportgraphics(ax,strcat('plots/linear_hygraph_embedding_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
     end
 end

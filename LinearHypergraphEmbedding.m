@@ -6,7 +6,6 @@
 % 
 % - W2   2nd order adjacency matrix
 % - W3   3rd order adjacency tensor
-% - gamma   Decay parameter for the linear hypergraph model
 % - c2   Coefficient for 2nd order Laplacian
 % - c3   Coefficient for 3rd order Laplacian
 
@@ -17,7 +16,7 @@
 %c2 = 1/2;
 %c3 = 1/3;
 
-function [x_est] = LinearHypergraphEmbedding(W2, W3, gamma, c2, c3)
+function [x_est] = LinearHypergraphEmbedding(W2, W3, c2, c3)
 
 
 
