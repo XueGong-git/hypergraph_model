@@ -16,7 +16,7 @@
 %c2 = 1/2;
 %c3 = 1/3;
 
-function [x_est] = LinearHypergraphEmbedding(W2, W3, c2, c3)
+function [x_est, V, lambda] = LinearHypergraphEmbedding(W2, W3, c2, c3, norm)
 
 
 
@@ -28,14 +28,18 @@ d3 = sum(W3, 2); D3 = diag(d3);
 % calculate graph Laplacian
 L2 = D2 - W2;
 L3 = D3 - W3;
+if norm == "true"
+    d2_inv = 1./d2; d2_inv(isinf(d2_inv)|isnan(d2_inv)) = 0;
+    d3_inv = 1./d3; d3_inv(isinf(d3_inv)|isnan(d3_inv)) = 0;
+    L2 = diag(d2_inv)*L2;
+    L3 = diag(d3_inv)*L3;
+end
 L = c2*L2 + c3*L3;
 
 
 % solve eigenvectors
 [V, lambda] = eigs(L,size(L,1),'smallestabs'); % all eigenvectors ranging from smallest eigenvalue to largest eigenvalue
 
-% plot eigenvalues
-scatter(1:size(L,1), diag(lambda));
 
 % return embedding
 x_est = V(:,2);
