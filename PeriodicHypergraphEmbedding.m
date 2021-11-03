@@ -1,5 +1,4 @@
-% LinearHypergraphEmbedding  Embed nodes in hypergraph to a linear
-% position
+% PeriodicHypergraphEmbedding  Embed nodes in hypergraph to a periodic
 % structure
 %
 % INPUTS
@@ -16,7 +15,7 @@
 %c2 = 1/2;
 %c3 = 1/3;
 
-function [x_est, V, lambda] = LinearHypergraphEmbedding(W2, W3, c2, c3, norm)
+function [x_est, V, lambda] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, norm)
 
 
 
@@ -28,7 +27,7 @@ d3 = sum(W3, 2); D3 = diag(d3);
 % calculate graph Laplacian
 L2 = D2 - W2;
 L3 = D3 - W3;
-if norm == "true"
+if norm == "true" %normalize the Laplacian
     d2_inv = 1./d2; d2_inv(isinf(d2_inv)|isnan(d2_inv)) = 0;
     d3_inv = 1./d3; d3_inv(isinf(d3_inv)|isnan(d3_inv)) = 0;
     L2 = diag(d2_inv)*L2;
@@ -42,6 +41,6 @@ L = c2*L2 + c3*L3;
 
 
 % return embedding
-x_est = V(:,2);
+x_est = atan(V(:,3)./V(:,2));
 
 end

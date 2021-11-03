@@ -1,14 +1,3 @@
-% generate_linear_hypergraph  Generate unweighted hypergraph that shows a linear
-% structure
-%
-% INPUTS
-% 
-% - n   Number of nodes
-% - x   Node embedding
-% - gamma   Decay parameter for the linear hypergraph model
-%
-% OUTPUTS
-% - (A2, A3)       Hypergraph -- with a matrix + a tensor
 tic
 clear
 
@@ -30,10 +19,10 @@ for input = 2
         switch input
     
         case 1 
-            x = linspace(1,n,n);
+            x = linspace(1,2*pi,n);
             data_type = "uniform";
         case 2 
-            x = sort(repmat(linspace(n/K,n,K),1,m)+(2*a*rand(1,n)-a)); % trophic levels
+            x = sort(repmat(linspace(1,2*pi,K),1,m)+(2*a*rand(1,n)-a)); % trophic levels
             data_type = "cluster";
         case 3
             x = linspace(0,0,n); %overlapping x
@@ -41,7 +30,7 @@ for input = 2
         end
 
         
-        [W2, W3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
+        [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
         
         data_type = "highschool";
 
@@ -141,20 +130,62 @@ for input = 2
         W2 = W2(idx_rand,idx_rand);
         W3 = W3(idx_rand,idx_rand);
         
-        [x_est] = LinearHypergraphEmbedding(W2, W3, c2, c3, "true");
-        
+        %estimate embedding using linear spectral clustering
+        [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false");
+        [x_est_periodic] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, "false");
+
                 
         
         
         % plot estimated embedding
         figure
-        s = scatter(x(idx_rand), x_est, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
+        s = scatter(x(idx_rand), x_est_linear, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
         alpha(s,0.3) % transparent color
         xlabel('x','FontSize', 13);
         ylabel('x*','FontSize', 13);
         set(gca,'fontsize',30);
         ax = gca;
         exportgraphics(ax,strcat('plots/linear_hygraph_embedding_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+
+        figure
+        s = scatter(x(idx_rand), x_est_periodic, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
+        alpha(s,0.3) % transparent color
+        xlabel('x','FontSize', 13);
+        ylabel('x*','FontSize', 13);
+        set(gca,'fontsize',30);
+        ax = gca;
+        exportgraphics(ax,strcat('plots/periodic_hygraph_embedding_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+
+        %compare likelihood
+        lnP_linear = [];
+        lnP_periodic = [];
+        gamma_array = [0:0.005:0.025]
+        for test_gamma = gamma_array
+            lnP_linear(end+1) = CalculateModelLikelihood(x, W2, T3, c3, test_gamma, "linear");
+            lnP_periodic(end+1) = CalculateModelLikelihood(x, W2, T3, c3, test_gamma, "periodic");
+        end
+        
+        %maximum likelihood of gamma
+        [~, max_linear_idx] = max(lnP_linear);
+        gamma_max_linear = test_gamma(max_linear_idx); 
+        [~, max_periodic_idx] = max(lnP_periodic);
+        gamma_max_periodic = test_gamma(max_periodic_idx); 
+
+        
+        % plot likelihood
+        plt = plot(gamma_array, lnP_linear, 'LineWidth',1.5);
+        hold on;
+        plot(gamma_array, lnP_periodic, '--r', 'LineWidth',1.5);
+        plot(gamma_max_linear, lnP_linear(max_linear_idx), 'ok', 'MarkerSize',10, 'LineWidth',2);
+        plot(gamma_max_periodic, lnP_periodic(max_periodic_idx), 'or', 'MarkerSize',10, 'LineWidth',2);
+        legend({'Linear','Periodic', 'MLE'},'FontSize', 20,'Location','southwest');
+        xlabel('\gamma','FontSize', 13);
+        ylabel('Log-likelihood','FontSize', 13);
+        set(gca,'fontsize',30);
+        plt.LineWidth = 2;
+        ax = gca;
+        exportgraphics(ax,strcat('plots/model_comparison_input_', num2str(input),'.eps'),'Resolution',300) 
+        hold off;
 
     end
 end

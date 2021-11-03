@@ -1,17 +1,17 @@
-% GenerateLinearHypergraph  Generate unweighted hypergraph that shows a linear
+% GeneratePeriodicHypergraph  Generate unweighted hypergraph that shows a linear
 % structure
 %
 % INPUTS
 % 
-% - x   Node embedding
+% - x   Node embedding, i.e. the phase angles of nodes
 % - c2  Weight of edge
 % - c3  Weight of triangles 
 % - gamma   Decay parameter for the linear hypergraph model
 %
 % OUTPUTS
-% - (A2, A3)       Hypergraph -- with a matrix + a tensor
+% - (W2, W3)       Hypergraph -- with a matrix + a tensor
 
-function [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type)
+function [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3, data_type)
 
 n = length(x);
 I = zeros(n);
@@ -26,7 +26,6 @@ T3 = zeros(n,n,n);
 
 
 
-
        
 
 
@@ -34,7 +33,7 @@ T3 = zeros(n,n,n);
 for i = 1:n-1 % smallest node index
     for j = i+1:n % largest node index
         %calculate incoherene of nodes
-        I(i,j) = (x(i)-x(j))^2;        
+        I(i,j) = abs(exp(1i*x(i))-exp(1i*x(j)))^2;        
     end
 end
 
@@ -49,7 +48,6 @@ for i = 1:n-1 % smallest node index
           if rand() < f(i,j)
                 E2(end+1,:) = [x(i),x(j)];
                 E2(end+1,:) = [x(j),x(i)];
-                
                 W2(i,j)=1; %only fill uppder triangle
                 %{
                 E2(end+1,:) = [i,j];
@@ -70,8 +68,8 @@ for i = 1:n-2 % smallest node index
             f(i,j,k) = 1/(1+exp(gamma*c3*I_R));
             if rand() < f(i,j,k)
                 T3(i,j,k) = 1; %tensor
-
-                E3(end+1,:) = [x(i),x(j),x(k)];
+                % edge list
+                E3(end+1,:) = [x(i),x(j),x(k)]; 
                 E3(end+1,:) = [x(j),x(k),x(i)];
                 E3(end+1,:) = [x(k),x(i),x(j)];
                 E3(end+1,:) = [x(k),x(j),x(i)];
@@ -104,21 +102,21 @@ s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none')
 alpha(s,0.3) % transparent color
 set(gca,'fontsize',30);
 ax = gca;
-exportgraphics(ax,strcat('plots/linear_hygraph_edges_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/periodic_hygraph_edges_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 % 3-d scatter plot for triangle
 s=scatter3(E3(:,1),E3(:,2),E3(:,3),'MarkerFaceColor','black','MarkerEdgeColor','none')
 alpha(s,0.3) % transparent color
 set(gca,'fontsize',30);
 ax = gca;
-exportgraphics(ax,strcat('plots/linear_hygraph_triangles_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/periodic_hygraph_triangles_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 % plot 2nd order adjacency matrix
 imagesc(W2,[0,1]); %plot color map of original matrix
 colormap(flipud(gray(2)));
 set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
-exportgraphics(ax,strcat('plots/linear_hygraph_W2_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/periodic_hygraph_W2_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 
 % plot 3rd order adjacency matirx
@@ -126,7 +124,7 @@ imagesc(W3); % plot color map of original matrix
 colormap(flipud(gray(256)));colorbar
 set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
-exportgraphics(ax,strcat('plots/linear_hygraph_W3_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/periodic_hygraph_W3_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 
 end
