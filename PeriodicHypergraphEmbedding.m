@@ -9,7 +9,7 @@
 % - c3   Coefficient for 3rd order Laplacian
 
 % OUTPUTS
-% - x       Node embedding
+% - x       Node embedding in [-π,π] 
 
 
 %c2 = 1/2;
@@ -41,6 +41,6 @@ L = c2*L2 + c3*L3;
 
 
 % return embedding
-x_est = atan(V(:,3)./V(:,2));
+x_est =  angle(V(:,3)+1i*V(:,2));
 
 end

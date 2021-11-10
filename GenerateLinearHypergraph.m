@@ -100,19 +100,22 @@ end
 W3 = W3 + W3';
 
 % 2-d scatter plot for edges
-s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none')
-alpha(s,0.3) % transparent color
-set(gca,'fontsize',30);
-ax = gca;
-exportgraphics(ax,strcat('plots/linear_hygraph_edges_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+if length(E2)>0
+    s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none')
+    alpha(s,0.3) % transparent color
+    set(gca,'fontsize',30);
+    ax = gca;
+    exportgraphics(ax,strcat('plots/linear_hygraph_edges_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+end
 
 % 3-d scatter plot for triangle
-s=scatter3(E3(:,1),E3(:,2),E3(:,3),'MarkerFaceColor','black','MarkerEdgeColor','none')
-alpha(s,0.3) % transparent color
-set(gca,'fontsize',30);
-ax = gca;
-exportgraphics(ax,strcat('plots/linear_hygraph_triangles_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
-
+if length(E3)>0
+    s=scatter3(E3(:,1),E3(:,2),E3(:,3),'MarkerFaceColor','black','MarkerEdgeColor','none')
+    alpha(s,0.3) % transparent color
+    set(gca,'fontsize',30);
+    ax = gca;
+    exportgraphics(ax,strcat('plots/linear_hygraph_triangles_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+end
 % plot 2nd order adjacency matrix
 imagesc(W2,[0,1]); %plot color map of original matrix
 colormap(flipud(gray(2)));

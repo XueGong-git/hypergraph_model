@@ -148,7 +148,6 @@ axis([0 n -1 1])
 exportgraphics(t,strcat('plots/periodic_',data_type,'_L3_eigenvectors.eps'),'Resolution',300) 
 
 
-
 %shuffle input adjacency matrix
 idx_rand = randperm(n);% shuffle the nodes
 W2 = W2(idx_rand,idx_rand);
@@ -236,7 +235,6 @@ xticklabels(ax1,{})
 t.TileSpacing = 'compact';
 axis([0 n -1 1])
 exportgraphics(t,strcat('plots/periodic_',data_type,'_eigenvectors_c3=',num2str(round(c3,1)),'.eps'),'Resolution',300) 
-
 
 
 end
