@@ -1,32 +1,36 @@
 tic
 clear
+set(groot,'defaultFigureVisible','off') % 'on' to turn back on.  
 
 
-n = 25;
+n = 100;
 K = 5; % number of clusters 
 m = n/K; % number of nodes per cluster
-a = 0.1*2*pi/K; % noise;
+a = 0.05;
+%a = 0.1*2*pi/K; % noise;
 
 
-c2 = 1/2; % weight of simple edge
-c3 = 1/3; % weight of simple edge
-gamma_input = [0 0.5 1 2 3]; % gamma for generating graph
-gamma_array = 0:1:8; % gamma for likelihood plot
+c2 = 1; % weight of simple edge
+c3 = 1/3; % weight of triangles
+gamma_input = [1 3 5 10]; % gamma for generating graph
+%gamma_array = gamma_input;
+gamma_array = 0:0.25:4; % gamma for likelihood plot
 
 rand_linear = [];
 rand_periodic = [];
 
 
-for input = 2
+for input = 1
     for gamma = gamma_input
         
         switch input
     
         case 1 
-            x = linspace(0,2*pi,n);%uniform from 0 to 2pi
+            x = linspace(0,2,n);%uniform from 0 to 2pi
             data_type = "uniform";
         case 2 
-            x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n)-a)); % angles from -pi to pi
+            x = sort(repmat(linspace(0,2, K),1,m)+(2*a*rand(1,n)-a));
+            %x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n)-a)); % angles from -pi to pi
             data_type = "cluster";
         case 3
             x = linspace(0,0,n); %overlapping x
@@ -38,21 +42,6 @@ for input = 2
         
 
         figure
-        % plot original W2 and W3
-        imagesc(W2,[0,1]); %plot color map of original matrix
-        colormap(flipud(gray(2)));
-        set(gca,'FontSize',30) ;
-        ax = gca;% Requires R2020a or later
-        exportgraphics(ax,strcat('plots/',data_type,'_W2_input.eps'),'Resolution',300) 
-
-
-        imagesc(W3); % plot color map of original matrix
-        colormap(flipud(gray(256)));colorbar
-        set(gca,'FontSize',30) ;
-        set(gca,'ColorScale','log')
-        ax = gca;% Requires R2020a or later
-        exportgraphics(ax,strcat('plots/',data_type,'_W3_input_.eps'),'Resolution',300) 
-
 %{
         % plot L2 eigenvalues
         % eigenvalues of L2 and L3
@@ -136,7 +125,7 @@ for input = 2
         idx_rand = randperm(size(W2,1));% shuffle the nodes
         W2 = W2(idx_rand,idx_rand);
         W3 = W3(idx_rand,idx_rand);
-        
+        [~, idx_reverse] = sort(idx_rand);
         
         %estimate embedding using linear spectral clustering
         [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false");
@@ -144,12 +133,17 @@ for input = 2
 
         
         %normalize the estimated embedding to the same range
-        %x_est_linear = x_est_linear*2*pi;        
+        x_est_linear = x_est_linear*norm(x,2)/norm(x_est_linear,2);        
         
-        %{
-        % plot estimated embedding
+        %reverse to the input order
+        x_est_linear = x_est_linear(idx_reverse);
+        x_est_periodic = x_est_periodic(idx_reverse);
+        W2 = W2(idx_reverse, idx_reverse);
+        W3 = W3(idx_reverse, idx_reverse);
+        
+       %plot estimated embedding
         figure
-        s = scatter(x(idx_rand), x_est_linear, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
+        s = scatter(x, x_est_linear, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
         alpha(s,0.3) % transparent color
         xlabel('x','FontSize', 13);
         ylabel('x*','FontSize', 13);
@@ -158,14 +152,14 @@ for input = 2
         exportgraphics(ax,strcat('plots/linear_hygraph_embedding_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
         figure
-        s = scatter(x(idx_rand), x_est_periodic, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
+        s = scatter(x, x_est_periodic, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
         alpha(s,0.3) % transparent color
         xlabel('x','FontSize', 13);
         ylabel('x*','FontSize', 13);
         set(gca,'fontsize',30);
         ax = gca;
         exportgraphics(ax,strcat('plots/periodic_hygraph_embedding_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
-%}
+
         %compare likelihood
         lnP_linear = []; lnP0_linear = [];
         lnP_periodic = []; lnP0_periodic = [];
@@ -173,6 +167,7 @@ for input = 2
         for test_gamma = gamma_array
             [lnP_linear(end+1), lnP0_linear(end+1)] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, test_gamma, "linear");
             [lnP_periodic(end+1), lnP0_periodic(end+1)] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, test_gamma, "periodic");
+            
         end
         
         %maximum likelihood of gamma
@@ -195,25 +190,34 @@ for input = 2
         xlabel('\gamma','FontSize', 13);
         ylabel('Log-likelihood','FontSize', 13);
         set(gca,'fontsize',30);
+        set(gca,'XLim',[0 max(gamma_array)])
         plt.LineWidth = 2;
         ax = gca;
         exportgraphics(ax,strcat('plots/model_comparison_linear_', data_type,'_gamma_', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
         hold off;
 
-        %perform K-mean and compare with input
         if data_type == "cluster"
-            cluster_input = kmeans(transpose(x(idx_rand)), K);
+            
+            cluster_input = kmeans(transpose(x), K);
             cluster_est_linear = kmeans(x_est_linear, K);
             cluster_est_periodic = kmeans(x_est_periodic, K);
             rand_linear(end+1) = CalculateRandIndex(cluster_input, cluster_est_linear);
             rand_periodic(end+1) = CalculateRandIndex(cluster_input, cluster_est_periodic);
 
-
         end
+    
         
     end
     
-    % plot rand_index
+             %perform K-mean and compare with input
+
+
+end
+
+% plot rand_index
+
+if data_type == "cluster"
+
     plt = plot(gamma_input, rand_linear, 'b', 'LineWidth',1.5);
     hold on;
     plot(gamma_input, rand_periodic, '-r', 'LineWidth',1.5);
@@ -221,9 +225,11 @@ for input = 2
     xlabel('\gamma','FontSize', 13);
     ylabel('Rand Index','FontSize', 13);
     set(gca,'fontsize',30);
+    set(gca,'YLim',[0.5 1.1])
     plt.LineWidth = 2;
     ax = gca;
-    exportgraphics(ax,strcat('plots/rand_linear_', data_type,'_gamma_', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
+    exportgraphics(ax,strcat('plots/rand_linear_', data_type,'.eps'),'Resolution',300) 
     hold off;
 end
+
 toc

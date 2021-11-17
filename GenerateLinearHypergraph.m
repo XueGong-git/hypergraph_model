@@ -27,9 +27,6 @@ T3 = zeros(n,n,n);
 
 
 
-       
-
-
 %calculate pairwise incoherence
 for i = 1:n-1 % smallest node index
     for j = i+1:n % largest node index
@@ -70,6 +67,11 @@ for i = 1:n-2 % smallest node index
             f(i,j,k) = 1/(1+exp(gamma*c3*I_R));
             if rand() < f(i,j,k)
                 T3(i,j,k) = 1; %tensor
+                T3(i,k,j) = 1; %tensor
+                T3(j,i,k) = 1; %tensor
+                T3(j,k,i) = 1; %tensor
+                T3(k,i,j) = 1; %tensor
+                T3(k,j,i) = 1; %tensor
 
                 E3(end+1,:) = [x(i),x(j),x(k)];
                 E3(end+1,:) = [x(j),x(k),x(i)];
@@ -100,8 +102,8 @@ end
 W3 = W3 + W3';
 
 % 2-d scatter plot for edges
-if length(E2)>0
-    s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none')
+if ~isempty(E2)
+    s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none');
     alpha(s,0.3) % transparent color
     set(gca,'fontsize',30);
     ax = gca;
@@ -109,8 +111,8 @@ if length(E2)>0
 end
 
 % 3-d scatter plot for triangle
-if length(E3)>0
-    s=scatter3(E3(:,1),E3(:,2),E3(:,3),'MarkerFaceColor','black','MarkerEdgeColor','none')
+if ~isempty(E3)
+    s=scatter3(E3(:,1),E3(:,2),E3(:,3),'MarkerFaceColor','black','MarkerEdgeColor','none');
     alpha(s,0.3) % transparent color
     set(gca,'fontsize',30);
     ax = gca;

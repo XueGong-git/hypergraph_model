@@ -65,6 +65,12 @@ for i = 1:n-2 % smallest node index
             f(i,j,k) = 1/(1+exp(gamma*c3*I_R));
             if rand() < f(i,j,k)
                 T3(i,j,k) = 1; %tensor
+                T3(i,k,j) = 1; %tensor
+                T3(j,i,k) = 1; %tensor
+                T3(j,k,i) = 1; %tensor
+                T3(k,i,j) = 1; %tensor
+                T3(k,j,i) = 1; %tensor
+
                 % edge list
                 E3(end+1,:) = [x(i),x(j),x(k)]; 
                 E3(end+1,:) = [x(j),x(k),x(i)];
