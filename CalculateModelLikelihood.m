@@ -79,7 +79,7 @@ for i = 1:n-2 % smallest node index
     end
 end
 
-%{
+
 
 % plot I(i,j)
 imagesc(I); %plot color map of original matrix
@@ -162,6 +162,6 @@ ax = gca;% Requires R2020a or later
 exportgraphics(ax,strcat('plots/',structure,'_PG3_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 checklnG = sum(PG2, 'all') + sum(PG3,'all');
-%}
+
 
 end

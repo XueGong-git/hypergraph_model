@@ -2,23 +2,23 @@ tic
 clear
 
 
-n = 25;
+n = 100;
 K = 5; % number of clusters 
 m = n/K; % number of node per cluster
-a = 0.1*2*pi/K; % noise;
+a = 0.05*pi; % noise;
 
 
 c2 = 1/2; % weight of simple edge
 c3 = 1/3; % weight of simple edge
-gamma_input = [5]; % gamma for generating graph
-gamma_array = 0:1:8; % gamma for likelihood plot
+gamma_input = [ 5]; % gamma for generating graph
+gamma_array = 0:0.25:8; % gamma for likelihood plot
 rand_linear = [];
 rand_periodic = [];
 
 
 
 
-for input = 2
+for input = 1
     for gamma = gamma_input
         
         switch input
@@ -54,6 +54,7 @@ for input = 2
         exportgraphics(ax,strcat('plots/periodic_',data_type,'_W3_input_.eps'),'Resolution',300) 
 
 
+        %{
         % eigenvalues of L2 and L3
         d2 = sum(W2, 2); D2 = diag(d2);
         d3 = sum(W3, 2); D3 = diag(d3);
@@ -149,25 +150,31 @@ for input = 2
         t.TileSpacing = 'compact';
         axis([0 n -1 1])
         exportgraphics(t,strcat('plots/periodic_',data_type,'_L_eigenvectors.eps'),'Resolution',300) 
-
+ %}
 
         
         %shuffle input adjacency matrix
         idx_rand = randperm(size(W2,1));% shuffle the nodes
+        [~, idx_reverse] = sort(idx_rand);
         W2 = W2(idx_rand,idx_rand);
         W3 = W3(idx_rand,idx_rand);
-        
+
         %estimate embedding using linear spectral clustering
         [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false");
         [x_est_periodic] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, "false");
 
-        
         %normalize the estimated embedding to the same range
-        x_est_linear = x_est_linear*2*pi;     
+        x_est_linear = x_est_linear*norm(x,2)/norm(x_est_linear,2);        
+        
+        %reverse to the input order
+        x_est_linear = x_est_linear(idx_reverse);
+        x_est_periodic = x_est_periodic(idx_reverse);
+        W2 = W2(idx_reverse, idx_reverse);
+        W3 = W3(idx_reverse, idx_reverse);
         
         % plot estimated embedding
         figure
-        s = scatter(x(idx_rand), x_est_linear, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
+        s = scatter(x, x_est_linear, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
         alpha(s,0.3) % transparent color
         xlabel('x','FontSize', 13);
         ylabel('x*','FontSize', 13);
@@ -176,7 +183,7 @@ for input = 2
         exportgraphics(ax,strcat('plots/linear_hygraph_embedding_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
         figure
-        s = scatter(x(idx_rand), x_est_periodic, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
+        s = scatter(x, x_est_periodic, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
         alpha(s,0.3) % transparent color
         xlabel('x','FontSize', 13);
         ylabel('x*','FontSize', 13);
@@ -214,7 +221,7 @@ for input = 2
         plot(gamma_max_linear, lnP_linear(max_linear_idx), 'ok', 'MarkerSize',10, 'LineWidth',2);
         plot(gamma_max_periodic, lnP_periodic(max_periodic_idx), 'or', 'MarkerSize',10, 'LineWidth',2);
         xline(gamma,'-',{'True \gamma'},'fontsize',20)
-        legend({'Linear','Periodic','MLE'},'FontSize', 20,'Location','northeast');
+        legend({'Linear','Periodic','MLE'},'FontSize', 20,'Location','southwest');
         xlabel('\gamma','FontSize', 13);
         ylabel('Log-likelihood','FontSize', 13);
         set(gca,'fontsize',30);
@@ -226,7 +233,7 @@ for input = 2
         
          %perform K-mean and compare with input
         if data_type == "cluster"
-            cluster_input = kmeans(transpose(x(idx_rand)), K);
+            cluster_input = kmeans(transpose(x), K);
             cluster_est_linear = kmeans(x_est_linear, K);
             cluster_est_periodic = kmeans(x_est_periodic, K);
             rand_linear(end+1) = CalculateRandIndex(cluster_input, cluster_est_linear);
@@ -238,7 +245,8 @@ for input = 2
     end
     
     
-    
+if data_type == "cluster"
+
     % plot rand_index
     plt = plot(gamma_input, rand_linear, 'b', 'LineWidth',1.5);
     hold on;
@@ -251,6 +259,8 @@ for input = 2
     ax = gca;
     exportgraphics(ax,strcat('plots/rand_periodic_', data_type,'.eps'),'Resolution',300) 
     hold off;
+end
     
 end
 toc
+sound(sin(1:3000));

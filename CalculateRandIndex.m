@@ -1,11 +1,11 @@
 function ri = CalculateRandIndex(p1, p2, varargin)
 %RAND_INDEX Computes the rand index between two partitions.
-%   RAND_INDEX(p1, p2) computes the rand index between partitions p1 and
+%   CalculateRandIndex(p1, p2) computes the rand index between partitions p1 and
 %   p2. Both p1 and p2 must be specified as N-by-1 or 1-by-N vectors in
 %   which each elements is an integer indicating which cluster the point
 %   belongs to.
 %
-%   RAND_INDEX(p1, p2, 'adjusted') computes the adjusted rand index
+%   CalculateRandIndex(p1, p2, 'adjusted') computes the adjusted rand index
 %   between partitions p1 and p2. The adjustment accounts for chance
 %   correlation.
     %% Parse the input and throw errors

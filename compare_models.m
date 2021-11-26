@@ -2,54 +2,13 @@ tic
 clear
 
 
-c2 = 1/2; % weight of simple edge
-n = 327;
-E2 = []; % edge list
-W2 = zeros(n); % 2nd order adjacency matrix  
-
-E3 = []; % edge list
-W3 = zeros(n); % 2nd order adjacency matrix  
-
-
+c2 = 1; % weight of simple edge
 %read hyper edges in a cell array
-
-fid = fopen('highschool.txt');
-line1 = fgetl(fid);
-res=line1;
-while ischar(line1)
-line1 = fgetl(fid);
-res = char(res,line1);
-end
-fclose(fid);
-
-
-for k=1:size(res,1)
-  E{k} = str2num(res(k,:));
-  %update edge list
-  if length(E{k}) == 2
-      E2(end+1,:) = [E{k}(1),E{k}(2)];
-      E2(end+1,:) = [E{k}(2),E{k}(1)];
-      W2(E{k}(1),E{k}(2))=1; % only fill uppder triangle
-  elseif length(E{k}) == 3
-      E3(end+1,:) = E{k};
-      E3(end+1,:) = [E{k}(1),E{k}(2),E{k}(3)];
-      E3(end+1,:) = [E{k}(1),E{k}(3),E{k}(2)];
-      E3(end+1,:) = [E{k}(2),E{k}(1),E{k}(3)];
-      E3(end+1,:) = [E{k}(2),E{k}(3),E{k}(1)];
-      E3(end+1,:) = [E{k}(3),E{k}(1),E{k}(2)];
-      E3(end+1,:) = [E{k}(3),E{k}(2),E{k}(1)];
-        
-      W2(E{k}(1),E{k}(2))=1; %only fill uppder triangle
-      W3(E{k}(1),E{k}(2))= W3(E{k}(2),E{k}(2))+1;
-      W3(E{k}(1),E{k}(3))= W3(E{k}(1),E{k}(3))+1;
-      W3(E{k}(2),E{k}(3))= W3(E{k}(2),E{k}(3))+1;
-  end
-end
-
-%symmetryze matrix
-W2 = W2 + W2'; W3 = W3 + W3'; 
-
 data_type = "highschool";
+
+if data == "highschool"
+    [W2, W3] = LoadHighSchoolData();
+end
 
 figure
 % plot original W2 and W3
@@ -67,7 +26,7 @@ set(gca,'ColorScale','log')
 ax = gca;% Requires R2020a or later
 exportgraphics(ax,strcat('plots/periodic_',data_type,'_W3_input_.eps'),'Resolution',300) 
 
-
+%{
 % plot L2 eigenvalues
 % eigenvalues of L2 and L3
 d2 = sum(W2, 2); D2 = diag(d2);
@@ -146,10 +105,11 @@ xticklabels(ax1,{})
 t.TileSpacing = 'compact';
 axis([0 n -1 1])
 exportgraphics(t,strcat('plots/periodic_',data_type,'_L3_eigenvectors.eps'),'Resolution',300) 
-
+ %}
 
 %shuffle input adjacency matrix
 idx_rand = randperm(n);% shuffle the nodes
+[~, idx_reverse] = sort(idx_rand);
 W2 = W2(idx_rand,idx_rand);
 W3 = W3(idx_rand,idx_rand);
 

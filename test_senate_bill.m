@@ -12,7 +12,6 @@ W3 = zeros(n); % 2nd order adjacency matrix
 
 
 %read hyper edges in a cell array
-
 fid = fopen('senate_bills.txt');
 line1 = fgetl(fid);
 res=line1;
