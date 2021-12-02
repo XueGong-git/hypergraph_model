@@ -14,10 +14,11 @@
 % - lnP  log-Likelihood of the grpah
 % - lnP0 log-likelihood of null graph
 
-function [lnP, lnP0] = CalculateModelLikelihood(x, W2, T3, c2, c3, gamma, structure)
+function [lnP, eta] = CalculateModelLikelihood(x, W2, T3, c2, c3, gamma, structure)
 n = length(x);
 I = zeros(n);
 lnP = 0;
+eta = 0;
 lnP0 = 0;
 P_edge = zeros(n, n);
 P_triangles = zeros(n,n,n);
@@ -52,6 +53,7 @@ for i = 1:n-1
         P_edge(i,j) = 1/(1+exp(c2*gamma*I(i,j)));
         if W2(i,j) == 1
             lnP = lnP - log(1+exp(c2*gamma*I(i,j))); 
+            eta = eta + I(i,j);
         else
             lnP = lnP + c2*gamma*I(i,j) - log(1+exp(c2*gamma*I(i,j)));
         end
@@ -71,6 +73,7 @@ for i = 1:n-2 % smallest node index
             lnP0 = lnP0 + gamma*c3*I_R - log(1+exp(gamma*c3*I_R)); % log-likelihood of null graph 
             if T3(i,j,k) == 1
                 lnP = lnP - log(1+exp(gamma*c3*I_R));
+                eta = eta + I_R;
             else
                 lnP = lnP + gamma*c3*I_R - log(1+exp(gamma*c3*I_R));
 
@@ -80,7 +83,7 @@ for i = 1:n-2 % smallest node index
 end
 
 
-
+%{
 % plot I(i,j)
 imagesc(I); %plot color map of original matrix
 %colormap(flipud(gray()));
@@ -163,5 +166,5 @@ exportgraphics(ax,strcat('plots/',structure,'_PG3_gamma=', num2str(round(gamma,2
 
 checklnG = sum(PG2, 'all') + sum(PG3,'all');
 
-
+%}
 end

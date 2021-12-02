@@ -9,24 +9,25 @@ m = n/K; % number of nodes per cluster
 
 
 c2 = 1; % weight of simple edge
-c3 = 1/3; % weight of triangles
+c3 = 0; % weight of triangles
 %gamma_array = gamma_input;
 gamma_array = 0:0.25:4; % gamma for likelihood plot
-gamma_input = 1:0.5:5; % gamma for generating graph
+gamma_input = 3; % gamma for generating graph
 
 for input_shape = "periodic"
     
-for input = 1:2
+for input = 2
     rand_linear = [];
     rand_periodic = [];
     triangle_density = [];
     edge_density = [];
     max_lnP_linear = [];
+    max_lnP_linear_scaled = [];
     max_lnP_periodic = [];
     for gamma = gamma_input
         
         if input_shape == "linear" 
-            a = 0.05;
+            a = 0.2;
 
             switch input
 
@@ -44,7 +45,7 @@ for input = 1:2
             [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
 
         elseif input_shape == "periodic" 
-            a = 0.05*pi; % noise;
+            a = 0.1*pi; % noise;
 
             switch input
     
@@ -168,13 +169,25 @@ for input = 1:2
         
         %normalize the estimated embedding to the same range
         x_est_linear = x_est_linear*norm(x,2)/norm(x_est_linear,2);        
-        
+
         %reverse to the input order
         x_est_linear = x_est_linear(idx_reverse);
         x_est_periodic = x_est_periodic(idx_reverse);
         W2 = W2(idx_reverse, idx_reverse);
         W3 = W3(idx_reverse, idx_reverse);
         
+        
+        %reorder nodes according to the embedding
+        [~,idx_linear] = sort(x_est_linear);
+        W2_reorder_linear = W2(idx_linear,idx_linear);
+        W3_reorder_linear = W3(idx_linear,idx_linear);
+
+        %reorder nodes according to the embedding
+        [~,idx_periodic] = sort(x_est_periodic);
+        W2_reorder_periodic = W2(idx_periodic,idx_periodic);
+        W3_reorder_periodic = W3(idx_periodic,idx_periodic);
+
+
         
        %plot estimated embedding
         
@@ -196,19 +209,48 @@ for input = 1:2
         exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_periodic_embedding_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
         
-        %compare likelihood
-        lnP_linear = []; lnP0_linear = [];
-        lnP_periodic = []; lnP0_periodic = [];
+        
+        
+        % plot reordered W2
+        imagesc(W2_reorder_linear,[0,1]); %plot color map of original matrix
+        colormap(flipud(gray(2)));
+        set(gca,'FontSize',30) ;
+        ax = gca;% Requires R2020a or later
+        exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_W2_reorder_linear.eps'),'Resolution',300) 
 
+        % plot reordered W2
+        imagesc(W2_reorder_periodic,[0,1]); %plot color map of original matrix
+        colormap(flipud(gray(2)));
+        set(gca,'FontSize',30) ;
+        ax = gca;% Requires R2020a or later
+        exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_W2_reorder_periodic.eps'),'Resolution',300) 
+
+        
+        %compare likelihood
+        lnP_linear = [];  lnP_linear_scaled = []; 
+        lnP_periodic = []; 
+        
+        %calculate eta
+        [~, eta_linear] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, 2, "linear");
+        [~, eta_periodic] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, 2, "periodic");
+
+    
+        %scale linear to the same incoherence
+        x_est_linear_scaled = x_est_linear*eta_periodic/eta_linear;  
+        
         for test_gamma = gamma_array
-            [lnP_linear(end+1), lnP0_linear(end+1)] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, test_gamma, "linear");
-            [lnP_periodic(end+1), lnP0_periodic(end+1)] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, test_gamma, "periodic");
+            [lnP_linear(end+1), ~] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, test_gamma, "linear");
+            [lnP_linear_scaled(end+1), ~] = CalculateModelLikelihood(x_est_linear_scaled, W2, T3, c2, c3, test_gamma, "linear");
+            [lnP_periodic(end+1), ~] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, test_gamma, "periodic");
+        
             
         end
         
         %maximum likelihood of gamma
         [max_lnP_linear(end+1), max_linear_idx] = max(lnP_linear);
         gamma_max_linear = gamma_array(max_linear_idx); 
+        [max_lnP_linear_scaled(end+1), max_linear_scaled_idx] = max(lnP_linear_scaled);
+        gamma_max_linear_scaled = gamma_array(max_linear_scaled_idx); 
         [max_lnP_periodic(end+1), max_periodic_idx] = max(lnP_periodic);
         gamma_max_periodic = gamma_array(max_periodic_idx); 
 
@@ -227,16 +269,18 @@ for input = 1:2
 
         end
         
-                % plot likelihood
+        % plot likelihood
         plt = plot(gamma_array, lnP_linear, 'b', 'LineWidth',1.5);
         hold on;
-        plot(gamma_array, lnP_periodic, '-r', 'LineWidth',1.5);
-        %plot(gamma_array, lnP0_linear, '--b', 'LineWidth',1.5);
-        %plot(gamma_array, lnP0_periodic, '--r', 'LineWidth',1.5);
-        plot(gamma_max_linear, lnP_linear(max_linear_idx), 'ok', 'MarkerSize',10, 'LineWidth',2);
+        plot(gamma_array, lnP_linear_scaled, 'b--', 'LineWidth',1.5);
+        plot(gamma_array, lnP_periodic, 'r', 'LineWidth',1.5);
+        plot(gamma_max_linear, lnP_linear(max_linear_idx), 'ob', 'MarkerSize',10, 'LineWidth',2);
+        plot(gamma_array, -1*eta_linear*gamma_array, ':b', 'LineWidth',1);
+        plot(gamma_array, -1*eta_periodic*gamma_array, ':r', 'LineWidth',1);
         plot(gamma_max_periodic, lnP_periodic(max_periodic_idx), 'or', 'MarkerSize',10, 'LineWidth',2);
+        plot(gamma_max_linear_scaled, lnP_linear_scaled(max_linear_scaled_idx), 'ob', 'MarkerSize',10, 'LineWidth',2);
         xline(gamma,'-',{'True \gamma'},'fontsize',20)
-        legend({'Linear','Periodic','MLE'},'FontSize', 20,'Location','best');
+        legend({'Linear','Linear scaled','Periodic','MLE','Slope = Linear Incoherence','Slope = Periodic Incoherence'},'FontSize', 20,'Location','best');
         xlabel('\gamma','FontSize', 13);
         ylabel('Log-likelihood','FontSize', 13);
         set(gca,'fontsize',30);

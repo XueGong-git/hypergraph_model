@@ -12,7 +12,7 @@ T3 = zeros(n,n,n);
 
 %read hyper edges in a cell array
 
-fid = fopen('highschool.txt');
+fid = fopen('data/highschool.txt');
 line1 = fgetl(fid);
 res=line1;
 while ischar(line1)

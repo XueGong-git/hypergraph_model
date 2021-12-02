@@ -306,3 +306,5 @@ exportgraphics(ax,strcat('plots/rand_linear_', data_type,'.eps'),'Resolution',30
 hold off;
 
 toc
+load handel
+sound(y,Fs)
