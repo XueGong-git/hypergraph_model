@@ -47,6 +47,7 @@ set(gca,'fontsize',30);
 ax = gca;
 exportgraphics(ax,strcat('plots/linear_L_eigenvalues_c3=',num2str(round(c3,1)),'.eps'),'Resolution',300) 
 
+%{
 % plot top eigenvectors
 t = tiledlayout(4,1);
 ax1 = nexttile;
@@ -73,6 +74,7 @@ axis([0 size(W2,2) -1 1])
 exportgraphics(t,strcat('plots/linear_eigenvectors_c3=',num2str(round(c3,1)),'.eps'),'Resolution',300) 
 
 figure
+%}
 
 % return embedding
 x_est = V(:,2);

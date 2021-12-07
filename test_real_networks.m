@@ -2,9 +2,9 @@ tic
 clear
 
 
-c2 = 1/10; % weight of simple edge
-c3_array = [1, 3, 5, 7]/30;
-gamma_array = 0:1:15; % gamma for likelihood plot
+c2 = 1; % weight of simple edge
+c3_array = [0, 1/3, 2/3];
+gamma_array = 0:3:30; % gamma for likelihood plot
 data_type = "highschool";
 K = 9;
 rand_linear = [];
@@ -13,7 +13,7 @@ rand_periodic = [];
 
 if data_type == "highschool"
     [W2, W3, T3, E2, E3] = LoadHighSchool();
-    label = readtable('highschool_label', 'ReadVariableNames', false);
+    label = readtable('data/highschool_label', 'ReadVariableNames', false);
 elseif data_type == "senate_bill"
     [W2, W3, T3, E2, E3] = LoadSenateBill();
 
@@ -25,10 +25,31 @@ idx_rand = randperm(n);% shuffle the nodes
 [~, idx_reverse] = sort(idx_rand);
 W2 = W2(idx_rand,idx_rand);
 W3 = W3(idx_rand,idx_rand);
+c3 = 1/3;
 
-for c3 = c3_array % weight of triangles
+%for c3 = c3_array % weight of triangles
 
+    %check degree distribution
+    degree_eff = sum(c2*W2 + c3*W3, 2);
+    f=figure;
+    hist(degree_eff);
+    saveas(f,strcat('plots/highschool_degree_eff_c3=',num2str(round(c3,2)),'.eps'));
 
+    %trim  nodes with highest degrees
+    keepIDs = (degree_eff< max(degree_eff)*0.5) & (degree_eff> min(degree_eff)*4);
+    W2 = W2(keepIDs, keepIDs);
+    T3 = T3(keepIDs, keepIDs, keepIDs);
+    W3 = sum(T3, 3);
+    idx_rand = idx_rand(keepIDs);
+    [~, idx_reverse] = sort(idx_rand);
+
+    %check degree distribution again
+    degree_eff = sum(c2*W2 + c3*W3, 2);
+    f=figure;
+    hist(degree_eff);
+    saveas(f,strcat('plots/highschool_degree_eff_trim_c3=',num2str(round(c3,2)),'.eps'));
+
+    
     %estimate embedding using linear spectral clustering
     [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false");
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, "false");
@@ -52,10 +73,21 @@ for c3 = c3_array % weight of triangles
     W2_reorder_periodic = W2(idx_periodic,idx_periodic);
     W3_reorder_periodic = W3(idx_periodic,idx_periodic);
     
+    %calculate eta
+    [~, eta_linear] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, 2, "linear");
+    [~, eta_periodic] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, 2, "periodic");
+
+
+    %scale linear to the same incoherence
+    x_est_linear_scaled = x_est_linear*eta_periodic/eta_linear;  
+
+
     %compare likelihood
     lnP_linear = []; lnP0_linear = [];
     lnP_periodic = []; lnP0_periodic = [];
 
+    
+    
     for test_gamma = gamma_array
         [lnP_linear(end+1), lnP0_linear(end+1)] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, test_gamma, "linear");
         [lnP_periodic(end+1), lnP0_periodic(end+1)] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, test_gamma, "periodic");
@@ -78,7 +110,7 @@ for c3 = c3_array % weight of triangles
         %plot(gamma_array, lnP0_periodic, '--r', 'LineWidth',1.5);
         plot(gamma_max_linear, lnP_linear(max_linear_idx), 'ok', 'MarkerSize',10, 'LineWidth',2);
         plot(gamma_max_periodic, lnP_periodic(max_periodic_idx), 'or', 'MarkerSize',10, 'LineWidth',2);
-        legend({'Linear','Periodic','MLE'},'FontSize', 20,'Location','southeast');
+        legend({'Linear','Periodic','MLE'},'FontSize', 20,'Location','best');
         xlabel('\gamma','FontSize', 13);
         ylabel('Log-likelihood','FontSize', 13);
         set(gca,'fontsize',30);
@@ -91,6 +123,7 @@ for c3 = c3_array % weight of triangles
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % Generate plots
+    %{
     % 2-d scatter plot for edges
     figure
     s = scatter(x_est_linear(E2(:,1)),x_est_linear(E2(:,2)),'MarkerFaceColor','black','MarkerEdgeColor','none');
@@ -108,7 +141,7 @@ for c3 = c3_array % weight of triangles
     set(gca,'fontsize',30);
     ax = gca;
     exportgraphics(ax,strcat('plots/',data_type,'_triangles.eps'),'Resolution',300) 
-
+%}
     % plot reordered W2
     imagesc(W2_reorder_linear,[0,1]); %plot color map of original matrix
     colormap(flipud(gray(2)));
@@ -144,6 +177,7 @@ for c3 = c3_array % weight of triangles
     
 
     cluster_input = table2array(label);
+    cluster_input = cluster_input(keepIDs);
     cluster_est_linear = kmeans(x_est_linear, K);
     cluster_est_periodic = kmeans(x_est_periodic, K);
     rand_linear(end+1) = CalculateRandIndex(cluster_input, cluster_est_linear);
@@ -290,7 +324,7 @@ for c3 = c3_array % weight of triangles
 
 %}
     
-end
+%end
 
 plt = plot(c3_array, rand_linear, 'b', 'LineWidth',1.5);
 hold on;
@@ -306,5 +340,5 @@ exportgraphics(ax,strcat('plots/rand_linear_', data_type,'.eps'),'Resolution',30
 hold off;
 
 toc
-load handel
-sound(y,Fs)
+%load handel
+%sound(y,Fs)

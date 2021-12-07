@@ -60,6 +60,7 @@ W2 = W2 + W2'; % get a symmetric matrix
 for i = 1:n-2 % smallest node index
     for j = i+1:n-1 % second smallest index
         for k = j+1:n % largest node index
+        fprintf('i = %d, j = %d, k = %d.\n',i,j,k);
             %calculate incoherene of nodes
             I_R = I(i,j)+ I(i,k) + I(j,k);
             f(i,j,k) = 1/(1+exp(gamma*c3*I_R));
