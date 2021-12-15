@@ -60,7 +60,7 @@ W2 = W2 + W2'; % get a symmetric matrix
 for i = 1:n-2 % smallest node index
     for j = i+1:n-1 % second smallest index
         for k = j+1:n % largest node index
-        fprintf('i = %d, j = %d, k = %d.\n',i,j,k);
+        %fprintf('i = %d, j = %d, k = %d.\n',i,j,k);
             %calculate incoherene of nodes
             I_R = I(i,j)+ I(i,k) + I(j,k);
             f(i,j,k) = 1/(1+exp(gamma*c3*I_R));
@@ -119,6 +119,8 @@ if ~isempty(E3)
     ax = gca;
     exportgraphics(ax,strcat('plots/periodic_hygraph_triangles_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 end
+
+%}
 % plot 2nd order adjacency matrix
 imagesc(W2,[0,1]); %plot color map of original matrix
 colormap(flipud(gray(2)));
@@ -133,6 +135,6 @@ colormap(flipud(gray(256)));colorbar
 set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
 exportgraphics(ax,strcat('plots/periodic_hygraph_W3_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
-%}
+
 
 end

@@ -9,12 +9,12 @@ m = n/K; % number of nodes per cluster
 
 
 c2 = 1; % weight of simple edge
-c3 = 0; % weight of triangles
+c3 = 1/3; % weight of triangles
 %gamma_array = gamma_input;
-gamma_array = 0:0.25:4; % gamma for likelihood plot
+gamma_array = 0:0.5:10; % gamma for likelihood plot
 gamma_input = 3; % gamma for generating graph
 
-for input_shape = "periodic"
+for input_shape = "linear"
     
 for input = 2
     rand_linear = [];
@@ -45,7 +45,7 @@ for input = 2
             [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
 
         elseif input_shape == "periodic" 
-            a = 0.1*pi; % noise;
+            a = 0.2*pi; % noise;
 
             switch input
     
@@ -280,7 +280,7 @@ for input = 2
         plot(gamma_max_periodic, lnP_periodic(max_periodic_idx), 'or', 'MarkerSize',10, 'LineWidth',2);
         plot(gamma_max_linear_scaled, lnP_linear_scaled(max_linear_scaled_idx), 'ob', 'MarkerSize',10, 'LineWidth',2);
         xline(gamma,'-',{'True \gamma'},'fontsize',20)
-        legend({'Linear','Linear scaled','Periodic','MLE','Slope = Linear Incoherence','Slope = Periodic Incoherence'},'FontSize', 20,'Location','best');
+        legend({'Linear','Linear scaled','Periodic','MLE', 'Slope = -Periodic Incoherence', 'Slope = -Linear Incoherence'},'FontSize', 20,'Location','best');
         xlabel('\gamma','FontSize', 13);
         ylabel('Log-likelihood','FontSize', 13);
         set(gca,'fontsize',30);

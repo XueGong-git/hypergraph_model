@@ -14,7 +14,12 @@
 % - lnP  log-Likelihood of the grpah
 % - lnP0 log-likelihood of null graph
 
-function [lnP, eta] = CalculateModelLikelihood(x, W2, T3, c2, c3, gamma, structure)
+function [lnP, eta] = CalculateModelLikelihood(x, W2, T3, c2, c3, gamma, structure, no_triangle)
+
+if ~exist('no_triangle','var')
+ % third parameter does not exist, so default it to something
+  no_triangle = 0;
+end
 n = length(x);
 I = zeros(n);
 lnP = 0;
@@ -35,6 +40,8 @@ if structure == "linear"
         for j = i+1:n % largest node index
              %calculate incoherene of nodes
             I(i,j) = (x(i)-x(j))^2;        
+            I(j,i) = (x(i)-x(j))^2;        
+
         end
     end
 elseif structure == "periodic"
@@ -42,6 +49,8 @@ elseif structure == "periodic"
         for j = i+1:n % largest node index
             %calculate incoherene of nodes
             I(i,j) = abs(exp(1i*x(i))-exp(1i*x(j)))^2;        
+            I(j,i) = abs(exp(1i*x(i))-exp(1i*x(j)))^2;        
+
         end
     end
 end
@@ -53,7 +62,7 @@ for i = 1:n-1
         P_edge(i,j) = 1/(1+exp(c2*gamma*I(i,j)));
         if W2(i,j) == 1
             lnP = lnP - log(1+exp(c2*gamma*I(i,j))); 
-            eta = eta + I(i,j);
+            eta = eta + c2*I(i,j);
         else
             lnP = lnP + c2*gamma*I(i,j) - log(1+exp(c2*gamma*I(i,j)));
         end
@@ -63,25 +72,36 @@ end
 
 
 % calculate probability of triangles
+if ~no_triangle
 for i = 1:n-2 % smallest node index
     for j = i+1:n-1 % second smallest index
         for k = j+1:n % largest node index
+            %fprintf('%d\n',round(i))
+            %fprintf('%d\n',round(j))
+            %fprintf('%d\n',round(k))
+
             %calculate incoherene of nodes
             I_R = I(i,j)+ I(i,k) + I(j,k);
             I3(i,j,k) = I_R;
+            I3(i,k,j) = I_R;
+            I3(j,i,k) = I_R;
+            I3(j,k,i) = I_R;
+            I3(k,i,j) = I_R;
+            I3(k,j,i) = I_R;
+            
             P_triangles(i,j,k) = 1/(1+exp(c3*gamma*I_R));
-            lnP0 = lnP0 + gamma*c3*I_R - log(1+exp(gamma*c3*I_R)); % log-likelihood of null graph 
+            lnP0 = lnP0 + c3*gamma*I_R - log(1+exp(c3*gamma*I_R)); % log-likelihood of null graph
             if T3(i,j,k) == 1
-                lnP = lnP - log(1+exp(gamma*c3*I_R));
-                eta = eta + I_R;
+                lnP = lnP - log(1+exp(c3*gamma*I_R));
+                eta = eta + c3*I_R;
             else
-                lnP = lnP + gamma*c3*I_R - log(1+exp(gamma*c3*I_R));
+                lnP = lnP + c3*gamma*I_R - log(1+exp(c3*gamma*I_R));
 
             end
         end
     end
 end
-
+end
 
 %{
 % plot I(i,j)
@@ -139,6 +159,7 @@ colorbar
 caxis(ax,[-3 0]);
 exportgraphics(ax,strcat('plots/',structure,'_PG2_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
+
 %plot triangles
 T3(isnan(T3)) = 0; T3(isinf(T3)) = 0;
 nonzero_idx = find(T3);
@@ -165,6 +186,6 @@ ax = gca;% Requires R2020a or later
 exportgraphics(ax,strcat('plots/',structure,'_PG3_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
 checklnG = sum(PG2, 'all') + sum(PG3,'all');
-
 %}
+
 end

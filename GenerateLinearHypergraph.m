@@ -11,8 +11,12 @@
 % OUTPUTS
 % - (A2, A3)       Hypergraph -- with a matrix + a tensor
 
-function [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type)
+function [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type, no_triangle)
 
+if ~exist('no_triangle','var')
+ % third parameter does not exist, so default it to something
+  no_triangle = 0;
+end
 n = length(x);
 I = zeros(n);
 f = zeros(n);
@@ -36,9 +40,7 @@ for i = 1:n-1 % smallest node index
 end
 
 
-
 %generate simple edges
-
 for i = 1:n-1 % smallest node index
     for j = i+1:n % largest node index
         %calculate likelihood
@@ -57,7 +59,7 @@ for i = 1:n-1 % smallest node index
 end
 W2 = W2 + W2'; % get a symmetric matrix
 
-
+if ~no_triangle
 %generate  hyperedges that connect 3 nodes
 for i = 1:n-2 % smallest node index
     for j = i+1:n-1 % second smallest index
@@ -72,7 +74,6 @@ for i = 1:n-2 % smallest node index
                 T3(j,k,i) = 1; %tensor
                 T3(k,i,j) = 1; %tensor
                 T3(k,j,i) = 1; %tensor
-
                 E3(end+1,:) = [x(i),x(j),x(k)];
                 E3(end+1,:) = [x(j),x(k),x(i)];
                 E3(end+1,:) = [x(k),x(i),x(j)];
@@ -97,7 +98,7 @@ for i = 1:n-2 % smallest node index
         end
     end
 end
-
+end
 %get a symmetric adjacency matirx
 W3 = W3 + W3';
 
