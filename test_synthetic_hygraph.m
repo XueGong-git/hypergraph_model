@@ -11,12 +11,12 @@ m = n/K; % number of nodes per cluster
 c2 = 1; % weight of simple edge
 c3 = 1/3; % weight of triangles
 %gamma_array = gamma_input;
-gamma_array = 0:0.5:10; % gamma for likelihood plot
-gamma_input = 3; % gamma for generating graph
+gamma_array = 0:1:10; % gamma for likelihood plot
+gamma_input = 0:1:10; % gamma for generating graph
 
 for input_shape = "linear"
     
-for input = 2
+for input = 1
     rand_linear = [];
     rand_periodic = [];
     triangle_density = [];
@@ -25,9 +25,9 @@ for input = 2
     max_lnP_linear_scaled = [];
     max_lnP_periodic = [];
     for gamma = gamma_input
-        
+        % add more iterations
         if input_shape == "linear" 
-            a = 0.2;
+            a = 0.05;
 
             switch input
 
@@ -188,7 +188,7 @@ for input = 2
         W3_reorder_periodic = W3(idx_periodic,idx_periodic);
 
 
-        
+        %{
        %plot estimated embedding
         
         s = scatter(x, x_est_linear, 200, 'MarkerFaceColor','black','MarkerEdgeColor','none');
@@ -224,7 +224,7 @@ for input = 2
         set(gca,'FontSize',30) ;
         ax = gca;% Requires R2020a or later
         exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_W2_reorder_periodic.eps'),'Resolution',300) 
-
+%}
         
         %compare likelihood
         lnP_linear = [];  lnP_linear_scaled = []; 
@@ -269,6 +269,7 @@ for input = 2
 
         end
         
+        %{
         % plot likelihood
         plt = plot(gamma_array, lnP_linear, 'b', 'LineWidth',1.5);
         hold on;
@@ -289,7 +290,7 @@ for input = 2
         ax = gca;
         exportgraphics(ax,strcat('plots/',input_shape,'_',data_type, '_model_comparison_gamma_', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
         hold off;
-    
+    %}
         
     end
     
@@ -306,12 +307,12 @@ plot(gamma_input, max_lnP_periodic, '-r', 'LineWidth',1.5);
 yyaxis right
 plot(gamma_input, edge_density, '--k', 'LineWidth',1.5);
 legend({'Linear','Periodic', 'Edge Density'},'FontSize', 20,'Location','best');
-xlabel('\gamma','FontSize', 13);
+xlabel('\gamma_{in}','FontSize', 13);
 yyaxis left
 ylabel('Max log-likelihood','FontSize', 13);
 yyaxis right
 ylabel('Edge density','FontSize', 13);
-set(gca,'fontsize',30);
+set(gca,'fontsize',25);
 %set(gca,'YLim',[0 1.1])
 plt.LineWidth = 2;
 ax = gca;
@@ -326,12 +327,12 @@ yline(0);
 yyaxis right
 plot(gamma_input, edge_density, '--k', 'LineWidth',1.5);
 legend({'Linear-Periodic', 'Edge Density'},'FontSize', 20,'Location','best');
-xlabel('\gamma','FontSize', 13);
+xlabel('\gamma_{in}','FontSize', 13);
 yyaxis left
 ylabel('Max Log-likelihood Diff','FontSize', 13);
 yyaxis right
 ylabel('Edge density','FontSize', 13);
-set(gca,'fontsize',30);
+set(gca,'fontsize',25);
 %set(gca,'YLim',[0 1.1])
 plt.LineWidth = 2;
 ax = gca;
