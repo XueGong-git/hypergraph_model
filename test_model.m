@@ -1,10 +1,15 @@
-tic
-clear
-set(groot,'defaultFigureVisible','off') % 'on' to turn back on.  
+clear all 
+clc
+close all
 
-n = 100;
+% folder that contains algorithm scripts
+addpath 'functions';
+set(groot,'defaultFigureVisible','off') % 'on' to turn back on.  
+tic
+
+
+n = 10;
 K = 5; % number of clusters 
-m = n/K; % number of nodes per cluster
 
 
 c2 = 1; % weight of simple edge
@@ -23,49 +28,12 @@ for input = 2
     max_lnP_linear_scaled = [];
     max_lnP_periodic = [];
     for gamma = gamma_input
-        % add more iterations
-        if input_shape == "linear" 
-            a = 0.05;
-
-            switch input
-
-            case 1 
-                x = linspace(0,2,n);%uniform from 0 to 2pi
-                data_type = "uniform";
-            case 2 
-                x = sort(repmat(linspace(0,2, K),1,m)+(2*a*rand(1,n)-a));
-                %x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n)-a)); % angles from -pi to pi
-                data_type = "cluster";
-            case 3
-                x = linspace(0,0,n); %overlapping x
-                data_type = "overlap";
-            end
-            [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
-
-        elseif input_shape == "periodic" 
-            a = 0.05*pi; % noise;
-
-            switch input
-    
-            case 1 
-                x = linspace(0,2*pi,n);%uniform from 0 to 2pi
-                data_type = "uniform";
-            case 2 
-                x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n)-a)); % angles from -pi to pi
-                data_type = "cluster";
-            case 3
-                x = linspace(0,0,n); %overlapping x
-                data_type = "overlap";
-            end
-            [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3, data_type);
-
-        end
+        % generate inputs
+        [x, W2, W3, T3, data_type] = GenerateHygraph(n, K, gamma, c2, c3, input_shape, input);
         
         
         %calculate edge density
-        n_nodes = size(W2,2);
-        n_edge = sum(W2,'all')/2;
-        n_triangle = sum(T3, 'all')/6;
+        n_nodes = size(W2,2); n_edge = sum(W2,'all')/2; n_triangle = sum(T3, 'all')/6;
         edge_density(end+1) = 2*n_edge/(n_nodes*(n_nodes-1));
         triangle_density(end+1) = 6*n_edge/(n_nodes*(n_nodes-1)*(n_nodes-2));
         
@@ -75,9 +43,9 @@ for input = 2
         n_nodes = size(W2,2);
 
         
-        figure
-%{
-        % plot L2 eigenvalues
+       %{
+         figure
+      % plot L2 eigenvalues
         % eigenvalues of L2 and L3
         d2 = sum(W2, 2); D2 = diag(d2);
         d3 = sum(W3, 2); D3 = diag(d3);
@@ -157,9 +125,8 @@ for input = 2
         
         %shuffle input adjacency matrix
         idx_rand = randperm(size(W2,1));% shuffle the nodes
-        [~, idx_reverse] = sort(idx_rand);
-        W2 = W2(idx_rand,idx_rand);
-        W3 = W3(idx_rand,idx_rand);
+        [~, idx_reverse] = sort(idx_rand); % index to undo the shuffle
+        W2 = W2(idx_rand,idx_rand); W3 = W3(idx_rand,idx_rand);
         
         %estimate embedding using linear spectral clustering
         [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false");
