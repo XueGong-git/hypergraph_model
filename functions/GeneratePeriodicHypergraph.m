@@ -102,6 +102,7 @@ end
 W3 = W3 + W3';
 
 %{
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if ~isempty(E2)
     % 2-d scatter plot for edges
     s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none');
@@ -120,7 +121,7 @@ if ~isempty(E3)
     exportgraphics(ax,strcat('plots/periodic_hygraph_triangles_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 end
 
-%}
+
 % plot 2nd order adjacency matrix
 imagesc(W2,[0,1]); %plot color map of original matrix
 colormap(flipud(gray(2)));
@@ -136,5 +137,7 @@ set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
 exportgraphics(ax,strcat('plots/periodic_hygraph_W3_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
+%%%%%%%%%%%%%%%%%%%% END OF PLOTS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%}
 
 end

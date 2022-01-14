@@ -102,6 +102,8 @@ end
 %get a symmetric adjacency matirx
 W3 = W3 + W3';
 
+%{
+%%%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%%%%%
 % 2-d scatter plot for edges
 if ~isempty(E2)
     s=scatter(E2(:,1),E2(:,2),'MarkerFaceColor','black','MarkerEdgeColor','none');
@@ -134,5 +136,7 @@ set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
 exportgraphics(ax,strcat('plots/linear_hygraph_W3_', data_type,'_gamma=', num2str(round(gamma,2)),'.eps'),'Resolution',300) 
 
+%%%%%%%%%%%%%%%%%%%%%%%%% END OF PLOTS %%%%%%%%%%%%%%%%%%%%%%%%
+%}
 
 end

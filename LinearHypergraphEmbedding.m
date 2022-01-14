@@ -39,6 +39,9 @@ L = c2*L2 + c3*L3;
 
 % solve eigenvectors
 [V, lambda] = eigs(L,size(L,1),'smallestabs'); % all eigenvectors ranging from smallest eigenvalue to largest eigenvalue
+x_est = V(:,2);
+
+%{
 eigenvalues = diag(lambda);
 scatter(1:min(25,size(L,2)), eigenvalues(1:min(25,size(L,2))), 100, 'MarkerFaceColor','black');
 xlabel('i','FontSize', 13);
@@ -47,7 +50,7 @@ set(gca,'fontsize',30);
 ax = gca;
 exportgraphics(ax,strcat('plots/linear_L_eigenvalues_c3=',num2str(round(c3,1)),'.eps'),'Resolution',300) 
 
-%{
+
 % plot top eigenvectors
 t = tiledlayout(4,1);
 ax1 = nexttile;
@@ -77,6 +80,5 @@ figure
 %}
 
 % return embedding
-x_est = V(:,2);
 
 end

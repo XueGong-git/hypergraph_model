@@ -2,7 +2,7 @@ tic
 clear
 set(groot,'defaultFigureVisible','off') % 'on' to turn back on.  
 
-n = 100;
+n = 50;
 K = 5; % number of clusters 
 m = n/K; % number of nodes per cluster
 
@@ -12,7 +12,7 @@ c3 = 1/3; % weight of triangles
 gamma_array = 0:1:10; % gamma for likelihood plot
 gamma_input = 0:1:10; % gamma for generating graph
 
-for input_shape = "linear"
+for input_shape = "periodic"
     
 for input = 2
     rand_linear = [];
