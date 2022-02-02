@@ -67,7 +67,7 @@ for input = 2
         n_edge = sum(W2,'all')/2;
         n_triangle = sum(T3, 'all')/6;
         edge_density(end+1) = 2*n_edge/(n_nodes*(n_nodes-1));
-        triangle_density(end+1) = 6*n_edge/(n_nodes*(n_nodes-1)*(n_nodes-2));
+        triangle_density(end+1) = 6*n_triangle/(n_nodes*(n_nodes-1)*(n_nodes-2));
         
             
         %extract largest connected component

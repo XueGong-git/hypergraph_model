@@ -4,7 +4,8 @@
 % INPUTS
 % 
 % - x   Node embedding
-% - (W2, T3)       Hypergraph -- with a matrix and a tensor
+% - (W2, T3)       Hypergraph -- with a matrix and a tensor. !!Make sure x,
+% W2, T3 are in the same order.
 % - c3  Weight of triangles 
 % - c2  Weight of edge
 % - gamma   Decay parameter for the linear hypergraph model
