@@ -10,37 +10,55 @@ K = 9;
 rand_linear = [];
 rand_periodic = [];
 
+filename = strcat(data_type,'.mat');
 
-if data_type == "highschool"
-    [W2, W3, T3, E2, E3] = LoadHighSchool();
-    label = readtable('data/highschool_label', 'ReadVariableNames', false);
-elseif data_type == "senate_bill"
-    [W2, W3, T3, E2, E3] = LoadSenateBill();
+if isfile(filename)
+    if data_type == "highschool"
+        load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
+    elseif data_type == "senate_bill"
+        load(filename,'W2', 'W3', 'T3', 'E2', 'E3')
+    end
 
+else
+    if data_type == "highschool"
+        [W2, W3, T3, E2, E3] = LoadHighSchool();
+        label = readtable('data/highschool_label', 'ReadVariableNames', false);
+        save('highschool','W2', 'W3', 'T3', 'E2', 'E3','label');
+    elseif data_type == "senate_bill"
+        [W2, W3, T3, E2, E3] = LoadSenateBill();
+        save('senate_bill','W2', 'W3', 'T3', 'E2', 'E3');
+    end
 end
+
+
+n_nodes = size(W2,2);
+n_edge = sum(W2,'all')/2;
+n_triangle = sum(T3, 'all')/6;
+edge_density = 2*n_edge/(n_nodes*(n_nodes-1));
+triangle_density = 6*n_edge/(n_nodes*(n_nodes-1)*(n_nodes-2));
 
 n = size(W2,2);
 %shuffle input adjacency matrix
-idx_rand = randperm(n);% shuffle the nodes
-[~, idx_reverse] = sort(idx_rand);
-W2 = W2(idx_rand,idx_rand);
-W3 = W3(idx_rand,idx_rand);
-c3 = 1/3;
+idx_rand_in = randperm(n);% shuffle the nodes
+[~, idx_reverse] = sort(idx_rand_in);
+W2_in = W2(idx_rand_in,idx_rand_in);
+W3_in = W3(idx_rand_in,idx_rand_in);
+T3_in = T3(idx_rand_in, idx_rand_in, idx_rand_in);
 
-%for c3 = c3_array % weight of triangles
+for c3 = c3_array % weight of triangles
 
     %check degree distribution
-    degree_eff = sum(c2*W2 + c3*W3, 2);
+    degree_eff = sum(c2*W2_in + c3*W3_in, 2);
     f=figure;
     hist(degree_eff);
     saveas(f,strcat('plots/highschool_degree_eff_c3=',num2str(round(c3,2)),'.eps'));
 
     %trim  nodes with highest degrees
     keepIDs = (degree_eff< max(degree_eff)*0.5) & (degree_eff> min(degree_eff)*4);
-    W2 = W2(keepIDs, keepIDs);
-    T3 = T3(keepIDs, keepIDs, keepIDs);
+    W2 = W2_in(keepIDs, keepIDs);
+    T3 = T3_in(keepIDs, keepIDs, keepIDs);
     W3 = sum(T3, 3);
-    idx_rand = idx_rand(keepIDs);
+    idx_rand = idx_rand_in(keepIDs);
     [~, idx_reverse] = sort(idx_rand);
 
     %check degree distribution again
@@ -58,10 +76,10 @@ c3 = 1/3;
     %x_est_linear = x_est_linear*norm(x_est_periodic,2)/norm(x_est_linear,2);        
 
     %reverse to the input order
-    x_est_linear = x_est_linear(idx_reverse);
-    x_est_periodic = x_est_periodic(idx_reverse);
-    W2 = W2(idx_reverse, idx_reverse);
-    W3 = W3(idx_reverse, idx_reverse);
+    %x_est_linear = x_est_linear(idx_reverse);
+    %x_est_periodic = x_est_periodic(idx_reverse);
+    %W2 = W2(idx_reverse, idx_reverse);
+    %W3 = W3(idx_reverse, idx_reverse);
 
     %reorder nodes according to the embedding
     [~,idx_linear] = sort(x_est_linear);
@@ -175,14 +193,12 @@ c3 = 1/3;
     exportgraphics(ax,strcat('plots/',data_type,'_W3_reorder_periodic_c3=',num2str(round(c3,1)),'.eps'),'Resolution',300) 
 
     
-
     cluster_input = table2array(label);
     cluster_input = cluster_input(keepIDs);
     cluster_est_linear = kmeans(x_est_linear, K);
     cluster_est_periodic = kmeans(x_est_periodic, K);
     rand_linear(end+1) = CalculateRandIndex(cluster_input, cluster_est_linear);
     rand_periodic(end+1) = CalculateRandIndex(cluster_input, cluster_est_periodic);
-
 
 
     
@@ -324,7 +340,7 @@ c3 = 1/3;
 
 %}
     
-%end
+end
 
 plt = plot(c3_array, rand_linear, 'b', 'LineWidth',1.5);
 hold on;
@@ -334,7 +350,6 @@ xlabel('c_3','FontSize', 13);
 ylabel('Rand Index','FontSize', 13);
 set(gca,'fontsize',30);
 set(gca,'YLim',[0.5 1.1])
-plt.LineWidth = 2;
 ax = gca;
 exportgraphics(ax,strcat('plots/rand_linear_', data_type,'.eps'),'Resolution',300) 
 hold off;

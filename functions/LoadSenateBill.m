@@ -12,7 +12,7 @@ T3 = zeros(n,n,n);
 
 %read hyper edges in a cell array
 
-fid = fopen('senate_bills.txt');
+fid = fopen('data/senate_bills.txt');
 line1 = fgetl(fid);
 res=line1;
 while ischar(line1)
