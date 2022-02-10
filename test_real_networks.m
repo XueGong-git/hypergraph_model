@@ -1,14 +1,25 @@
+clear all 
+clc
+close all
+
+% folder that contains algorithm scripts
+addpath 'functions';
+set(groot,'defaultFigureVisible','off') % 'on' to turn back on.  
 tic
-clear
 
 
 c2 = 1; % weight of simple edge
-c3_array = [0, 1/3, 2/3];
-gamma_array = 0:3:30; % gamma for likelihood plot
+c3_array = 0.5;
+gamma_array = 0.3; % gamma for likelihood plot
 data_type = "highschool";
 K = 9;
 rand_linear = [];
 rand_periodic = [];
+max_lnP_linear = [];
+max_lnP_periodic = [];
+% likelihood
+lnP_linear = zeros(length(c3_array),length(gamma_array));
+lnP_periodic = zeros(length(c3_array),length(gamma_array));
 
 filename = strcat(data_type,'.mat');
 
@@ -35,7 +46,7 @@ n_nodes = size(W2,2);
 n_edge = sum(W2,'all')/2;
 n_triangle = sum(T3, 'all')/6;
 edge_density = 2*n_edge/(n_nodes*(n_nodes-1));
-triangle_density = 6*n_edge/(n_nodes*(n_nodes-1)*(n_nodes-2));
+triangle_density = 6*n_triangle/(n_nodes*(n_nodes-1)*(n_nodes-2));
 
 n = size(W2,2);
 %shuffle input adjacency matrix
@@ -45,12 +56,14 @@ W2_in = W2(idx_rand_in,idx_rand_in);
 W3_in = W3(idx_rand_in,idx_rand_in);
 T3_in = T3(idx_rand_in, idx_rand_in, idx_rand_in);
 
-for c3 = c3_array % weight of triangles
+for ii = 1:length(c3_array)
+    c3 = c3_array(ii);
 
     %check degree distribution
     degree_eff = sum(c2*W2_in + c3*W3_in, 2);
+    norm_eta = c2*n_edge + c3*n_triangle;
     f=figure;
-    hist(degree_eff);
+    histogram(degree_eff);
     saveas(f,strcat('plots/highschool_degree_eff_c3=',num2str(round(c3,2)),'.eps'));
 
     %trim  nodes with highest degrees
@@ -64,22 +77,26 @@ for c3 = c3_array % weight of triangles
     %check degree distribution again
     degree_eff = sum(c2*W2 + c3*W3, 2);
     f=figure;
-    hist(degree_eff);
+    histogram(degree_eff);
     saveas(f,strcat('plots/highschool_degree_eff_trim_c3=',num2str(round(c3,2)),'.eps'));
 
     
     %estimate embedding using linear spectral clustering
     [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false");
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, "false");
+                
+    
+    %calculate eta
+    [~, eta_linear_est] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, 2, "linear");
+    [~, eta_periodic_est] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, 2, "linear");
 
-    %normalize the estimated embedding to the same range
-    %x_est_linear = x_est_linear*norm(x_est_periodic,2)/norm(x_est_linear,2);        
+    %scale estimation
+    x_est_linear = x_est_linear*sqrt(norm_eta/eta_linear_est);  
+    x_est_periodic = x_est_periodic*sqrt(norm_eta/eta_periodic_est);  
 
-    %reverse to the input order
-    %x_est_linear = x_est_linear(idx_reverse);
-    %x_est_periodic = x_est_periodic(idx_reverse);
-    %W2 = W2(idx_reverse, idx_reverse);
-    %W3 = W3(idx_reverse, idx_reverse);
+    [~, eta_linear_scaled] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, 2, "linear");
+    [~, eta_periodic_scaled] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, 2, "linear");
+
 
     %reorder nodes according to the embedding
     [~,idx_linear] = sort(x_est_linear);
@@ -90,53 +107,35 @@ for c3 = c3_array % weight of triangles
     [~,idx_periodic] = sort(x_est_periodic);
     W2_reorder_periodic = W2(idx_periodic,idx_periodic);
     W3_reorder_periodic = W3(idx_periodic,idx_periodic);
-    
-    %calculate eta
-    [~, eta_linear] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, 2, "linear");
-    [~, eta_periodic] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, 2, "periodic");
 
-
-    %scale linear to the same incoherence
-    x_est_linear_scaled = x_est_linear*eta_periodic/eta_linear;  
-
-
-    %compare likelihood
-    lnP_linear = []; lnP0_linear = [];
-    lnP_periodic = []; lnP0_periodic = [];
-
-    
-    
-    for test_gamma = gamma_array
-        [lnP_linear(end+1), lnP0_linear(end+1)] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, test_gamma, "linear");
-        [lnP_periodic(end+1), lnP0_periodic(end+1)] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, test_gamma, "periodic");
+    for jj = 1:length(gamma_array)
+        gamma = gamma_array(jj);
+        [lnP_linear(ii,jj), ~] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, gamma, "linear");
+        [lnP_periodic(ii,jj), ~] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, gamma, "periodic");
 
     end
     
     %maximum likelihood of gamma
-        [~, max_linear_idx] = max(lnP_linear);
-        gamma_max_linear = gamma_array(max_linear_idx); 
-        [~, max_periodic_idx] = max(lnP_periodic);
-        gamma_max_periodic = gamma_array(max_periodic_idx); 
+    [max_lnP_linear(end+1), max_linear_idx] = max(lnP_linear(ii,:));
+    gamma_max_linear = gamma_array(max_linear_idx); 
+    [max_lnP_periodic(end+1), max_periodic_idx] = max(lnP_periodic(ii,:));
+    gamma_max_periodic = gamma_array(max_periodic_idx); 
 
-        
-        % plot likelihood
-        plt = plot(gamma_array, lnP_linear, 'b', 'LineWidth',1.5);
-        hold on;
-        plot(gamma_array, lnP_periodic, '-r', 'LineWidth',1.5);
-        plt = plot(gamma_array, lnP_linear, 'b', 'LineWidth',1.5);
-        %plot(gamma_array, lnP0_linear, '--b', 'LineWidth',1.5);
-        %plot(gamma_array, lnP0_periodic, '--r', 'LineWidth',1.5);
-        plot(gamma_max_linear, lnP_linear(max_linear_idx), 'ok', 'MarkerSize',10, 'LineWidth',2);
-        plot(gamma_max_periodic, lnP_periodic(max_periodic_idx), 'or', 'MarkerSize',10, 'LineWidth',2);
-        legend({'Linear','Periodic','MLE'},'FontSize', 20,'Location','best');
-        xlabel('\gamma','FontSize', 13);
-        ylabel('Log-likelihood','FontSize', 13);
-        set(gca,'fontsize',30);
-        set(gca,'XLim',[0 max(gamma_array)])
-        plt.LineWidth = 2;
-        ax = gca;
-        exportgraphics(ax,strcat('plots/model_comparison_', data_type,'.eps'),'Resolution',300) 
-        hold off;
+    % plot likelihood
+    plt = plot(gamma_array, lnP_linear(ii,:), 'b', 'LineWidth',1.5);
+    hold on;
+    plot(gamma_array, lnP_periodic(ii,:), '-r', 'LineWidth',1.5);
+    plot(gamma_max_linear, lnP_linear(ii, max_linear_idx), 'ok', 'MarkerSize',10, 'LineWidth',2);
+    plot(gamma_max_periodic, lnP_periodic(ii, max_periodic_idx), 'or', 'MarkerSize',10, 'LineWidth',2);
+    legend({'Linear','Periodic','MLE'},'FontSize', 20,'Location','best');
+    xlabel('\gamma','FontSize', 13);
+    ylabel('Log-likelihood','FontSize', 13);
+    set(gca,'fontsize',30);
+    set(gca,'XLim',[0 max(gamma_array)])
+    plt.LineWidth = 2;
+    ax = gca;
+    exportgraphics(ax,strcat('plots/model_comparison_', data_type,'_c3_',num2str(round(c3,2)),'.eps'),'Resolution',300) 
+    hold off;
 
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -174,8 +173,6 @@ for c3 = c3_array % weight of triangles
     ax = gca;% Requires R2020a or later
     exportgraphics(ax,strcat('plots/',data_type,'_W2_reorder_periodic_c3=',num2str(round(c3,1)),'.eps'),'Resolution',300) 
 
-
-
     % plot reordered W3
     imagesc(W3_reorder_linear); % plot color map of original matrix
     colormap(flipud(gray(256)));colorbar
@@ -192,6 +189,7 @@ for c3 = c3_array % weight of triangles
     ax = gca;% Requires R2020a or later
     exportgraphics(ax,strcat('plots/',data_type,'_W3_reorder_periodic_c3=',num2str(round(c3,1)),'.eps'),'Resolution',300) 
 
+    %{
     
     cluster_input = table2array(label);
     cluster_input = cluster_input(keepIDs);
@@ -200,7 +198,7 @@ for c3 = c3_array % weight of triangles
     rand_linear(end+1) = CalculateRandIndex(cluster_input, cluster_est_linear);
     rand_periodic(end+1) = CalculateRandIndex(cluster_input, cluster_est_periodic);
 
-
+    %}
     
 
   %{
@@ -342,6 +340,9 @@ for c3 = c3_array % weight of triangles
     
 end
 
+%{
+
+%plot rand index
 plt = plot(c3_array, rand_linear, 'b', 'LineWidth',1.5);
 hold on;
 plot(c3_array, rand_periodic, '-r', 'LineWidth',1.5);
@@ -353,6 +354,40 @@ set(gca,'YLim',[0.5 1.1])
 ax = gca;
 exportgraphics(ax,strcat('plots/rand_linear_', data_type,'.eps'),'Resolution',300) 
 hold off;
+%}
+plt = plot(c3_array, max_lnP_linear, 'b', 'LineWidth',1.5);
+hold on;
+plot(c3_array, max_lnP_periodic, '-r', 'LineWidth',1.5);
+legend({'Linear','Periodic'},'FontSize', 20,'Location','southeast');
+xlabel('c_3','FontSize', 13);
+ylabel('Max log likelihood','FontSize', 13);
+set(gca,'fontsize',30);
+ax = gca;
+exportgraphics(ax,strcat('plots/max_lnP', data_type,'.eps'),'Resolution',300) 
+hold off;
+
+% plot heatmap of linear log-likelihood
+h = heatmap(round(lnP_linear, 2),'Colormap',parula);
+h.Title = strcat('LnP Periodic' );
+h.XLabel = '\gamma';
+h.YLabel = 'c3_{inv}';
+h.XData = round(gamma_array,2);
+h.YData = round(c3_array,2);
+ax = gca;% Requires R2020a or later
+caxis([-2000000, 0]);
+exportgraphics(ax,strcat('plots/lnP_linear_', data_type,'.eps'),'Resolution',300) 
+
+% plot heatmap of periodic log-likelihood
+h = heatmap(round(lnP_periodic, 2),'Colormap',parula);
+h.Title = strcat('LnP Periodic' );
+h.XLabel = '\gamma';
+h.YLabel = 'c3_{inv}';
+h.XData = round(gamma_array,2);
+h.YData = round(c3_array,2);
+ax = gca;% Requires R2020a or later
+caxis([-2000000, 0]);
+exportgraphics(ax,strcat('plots/lnP_periodic_', data_type,'.eps'),'Resolution',300) 
+
 
 toc
 %load handel
