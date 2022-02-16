@@ -15,7 +15,7 @@
 % - lnP  log-Likelihood of the grpah
 % - lnP0 log-likelihood of null graph
 
-function [lnP, eta] = CalculateModelLikelihood(x, W2, T3, c2, c3, gamma, structure, no_triangle)
+function [lnP, eta, P_edge, P_triangles] = CalculateModelLikelihood(x, W2, T3, c2, c3, gamma, structure, no_triangle)
 
 if ~exist('no_triangle','var')
  % third parameter does not exist, so default it to something
@@ -70,7 +70,7 @@ for i = 1:n-1
     end
 end
 
-
+P_edge = P_edge + P_edge';
 
 % calculate probability of triangles
 if ~no_triangle
@@ -90,7 +90,13 @@ for i = 1:n-2 % smallest node index
             I3(k,i,j) = I_R;
             I3(k,j,i) = I_R;
             
-            P_triangles(i,j,k) = 1/(1+exp(c3*gamma*I_R));
+            P_triangle = 1/(1+exp(c3*gamma*I_R));
+            P_triangles(i,j,k) = P_triangle; %tensor
+            P_triangles(i,k,j) = P_triangle; %tensor
+            P_triangles(j,i,k) = P_triangle; %tensor
+            P_triangles(j,k,i) = P_triangle; %tensor
+            P_triangles(k,i,j) = P_triangle; %tensor
+            P_triangles(k,j,i) = P_triangle; %tensor
             lnP0 = lnP0 + c3*gamma*I_R - log(1+exp(c3*gamma*I_R)); % log-likelihood of null graph
             if T3(i,j,k) == 1
                 lnP = lnP - log(1+exp(c3*gamma*I_R));

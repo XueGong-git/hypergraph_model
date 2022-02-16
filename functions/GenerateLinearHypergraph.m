@@ -48,7 +48,6 @@ for i = 1:n-1 % smallest node index
           if rand() < f(i,j)
                 E2(end+1,:) = [x(i),x(j)];
                 E2(end+1,:) = [x(j),x(i)];
-                
                 W2(i,j)=1; %only fill uppder triangle
                 %{
                 E2(end+1,:) = [i,j];

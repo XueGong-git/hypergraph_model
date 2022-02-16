@@ -8,9 +8,9 @@ set(groot,'defaultFigureVisible','off') % 'on' to turn back on.
 tic
 
 
-c2 = 1; % weight of simple edge
-c3_array = 0.5;
-gamma_array = 0.3; % gamma for likelihood plot
+c2 = 0; % weight of simple edge
+c3_array = 0.1:0.1:1;
+gamma_array = 0:0.2:2; % gamma for likelihood plot
 data_type = "highschool";
 K = 9;
 rand_linear = [];
@@ -78,7 +78,7 @@ for ii = 1:length(c3_array)
     degree_eff = sum(c2*W2 + c3*W3, 2);
     f=figure;
     histogram(degree_eff);
-    saveas(f,strcat('plots/highschool_degree_eff_trim_c3=',num2str(round(c3,2)),'.eps'));
+    saveas(f,strcat('plots/highschool_degree_eff_trim_c3=',num2str(round(c3,2)),'_c2_',num2str(round(c2,2)),'.eps'));
 
     
     %estimate embedding using linear spectral clustering
@@ -134,7 +134,7 @@ for ii = 1:length(c3_array)
     set(gca,'XLim',[0 max(gamma_array)])
     plt.LineWidth = 2;
     ax = gca;
-    exportgraphics(ax,strcat('plots/model_comparison_', data_type,'_c3_',num2str(round(c3,2)),'.eps'),'Resolution',300) 
+    exportgraphics(ax,strcat('plots/model_comparison_', data_type,'_c2_',num2str(round(c2,2)),'_c3_',num2str(round(c3,2)),'.eps'),'Resolution',300) 
     hold off;
 
     
@@ -363,7 +363,7 @@ xlabel('c_3','FontSize', 13);
 ylabel('Max log likelihood','FontSize', 13);
 set(gca,'fontsize',30);
 ax = gca;
-exportgraphics(ax,strcat('plots/max_lnP', data_type,'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/max_lnP', data_type,'_c2_',num2str(round(c2,2)),'.eps'),'Resolution',300) 
 hold off;
 
 % plot heatmap of linear log-likelihood
@@ -375,7 +375,7 @@ h.XData = round(gamma_array,2);
 h.YData = round(c3_array,2);
 ax = gca;% Requires R2020a or later
 caxis([-2000000, 0]);
-exportgraphics(ax,strcat('plots/lnP_linear_', data_type,'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/lnP_linear_', data_type,'_c2_',num2str(round(c2,2)),'.eps'),'Resolution',300) 
 
 % plot heatmap of periodic log-likelihood
 h = heatmap(round(lnP_periodic, 2),'Colormap',parula);
@@ -386,7 +386,7 @@ h.XData = round(gamma_array,2);
 h.YData = round(c3_array,2);
 ax = gca;% Requires R2020a or later
 caxis([-2000000, 0]);
-exportgraphics(ax,strcat('plots/lnP_periodic_', data_type,'.eps'),'Resolution',300) 
+exportgraphics(ax,strcat('plots/lnP_periodic_', data_type,'_c2_',num2str(round(c2,2)),'.eps'),'Resolution',300) 
 
 
 toc
