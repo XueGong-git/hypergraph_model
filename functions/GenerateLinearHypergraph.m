@@ -11,7 +11,7 @@
 % OUTPUTS
 % - (A2, A3)       Hypergraph -- with a matrix + a tensor
 
-function [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type, no_triangle)
+function [E2, E3, W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, no_triangle)
 
 if ~exist('no_triangle','var')
  % third parameter does not exist, so default it to something
@@ -46,13 +46,13 @@ for i = 1:n-1 % smallest node index
         %calculate likelihood
         f(i,j) = 1/(1+exp(gamma*c2*I(i,j)));
           if rand() < f(i,j)
-                E2(end+1,:) = [x(i),x(j)];
-                E2(end+1,:) = [x(j),x(i)];
+                %E2(end+1,:) = [x(i),x(j)];
+                %E2(end+1,:) = [x(j),x(i)];
                 W2(i,j)=1; %only fill uppder triangle
-                %{
+                
                 E2(end+1,:) = [i,j];
                 E2(end+1,:) = [j,i];
-            %}
+            
          end
     end
 end
@@ -73,26 +73,26 @@ for i = 1:n-2 % smallest node index
                 T3(j,k,i) = 1; %tensor
                 T3(k,i,j) = 1; %tensor
                 T3(k,j,i) = 1; %tensor
-                E3(end+1,:) = [x(i),x(j),x(k)];
-                E3(end+1,:) = [x(j),x(k),x(i)];
-                E3(end+1,:) = [x(k),x(i),x(j)];
-                E3(end+1,:) = [x(k),x(j),x(i)];
-                E3(end+1,:) = [x(j),x(i),x(k)];
-                E3(end+1,:) = [x(i),x(k),x(j)];
+                %E3(end+1,:) = [x(i),x(j),x(k)];
+                %E3(end+1,:) = [x(j),x(k),x(i)];
+                %E3(end+1,:) = [x(k),x(i),x(j)];
+                %E3(end+1,:) = [x(k),x(j),x(i)];
+                %E3(end+1,:) = [x(j),x(i),x(k)];
+                %E3(end+1,:) = [x(i),x(k),x(j)];
                 
                 % 3rd order adjacency matrix, only fill the upper triangle
                 W3(i,j)= W3(i,j)+1;
                 W3(i,k)= W3(i,k)+1;
                 W3(j,k)= W3(j,k)+1;
                 
-                %{
+                
                 E3(end+1,:) = [i,j,k];
                 E3(end+1,:) = [j,k,i];
                 E3(end+1,:) = [k,i,j];
                 E3(end+1,:) = [k,j,i];
                 E3(end+1,:) = [j,i,k];
                 E3(end+1,:) = [i,k,j];
-                %}
+                
             end
         end
     end

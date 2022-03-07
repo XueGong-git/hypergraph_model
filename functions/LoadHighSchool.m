@@ -12,12 +12,13 @@ T3 = zeros(n,n,n);
 
 %read hyper edges in a cell array
 
-fid = fopen('data/highschool.txt');
+fid = fopen('raw_data/highschool.txt');
 line1 = fgetl(fid);
 res=line1;
+
 while ischar(line1)
-line1 = fgetl(fid);
-res = char(res,line1);
+    line1 = fgetl(fid);
+    res = char(res,line1);
 end
 fclose(fid);
 
@@ -54,19 +55,5 @@ end
 %symmetryze matrix
 W2 = W2 + W2'; W3 = W3 + W3'; 
 
-%{
-%check node degree
-degree1 = sum(W2, 2);
-f=figure;
-%h = histogram(degree)
-hist(degree);
-saveas(f, 'plots/highschool_degree.eps')
 
-%common triangles
-degree2 = sum(W3, 2);
-f=figure;
-%h = histogram(degree)
-hist(degree);
-saveas(f, 'plots/highschool_triangles.eps')
-%}
 end

@@ -17,7 +17,7 @@ function  [x, W2, W3, T3, data_type] = GenerateHygraph(n, K, gamma, c2, c3, inpu
                 x = linspace(0,0,n); %overlapping x
                 data_type = "overlap";
             end
-            [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
+            [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3);
 
         elseif input_shape == "periodic" 
             a = 0.05*pi; % noise;
@@ -34,7 +34,7 @@ function  [x, W2, W3, T3, data_type] = GenerateHygraph(n, K, gamma, c2, c3, inpu
                 x = linspace(0,0,n); %overlapping x
                 data_type = "overlap";
             end
-            [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3, data_type);
+            [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3);
 
         end
 end

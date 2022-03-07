@@ -11,7 +11,7 @@
 % OUTPUTS
 % - (W2, W3)       Hypergraph -- with a matrix + a tensor
 
-function [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3, data_type)
+function [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3)
 
 n = length(x);
 I = zeros(n);

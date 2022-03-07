@@ -40,7 +40,7 @@ for input = 2
                 x = linspace(0,0,n); %overlapping x
                 data_type = "overlap";
             end
-            [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, data_type);
+            [W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3);
 
         elseif input_shape == "periodic" 
             a = 0.05*pi; % noise;
@@ -57,7 +57,7 @@ for input = 2
                 x = linspace(0,0,n); %overlapping x
                 data_type = "overlap";
             end
-            [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3, data_type);
+            [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3);
 
         end
         
@@ -252,9 +252,6 @@ for input = 2
         [max_lnP_periodic(end+1), max_periodic_idx] = max(lnP_periodic);
         gamma_max_periodic = gamma_array(max_periodic_idx); 
 
-
-
-        
 
 
         if data_type == "cluster"
