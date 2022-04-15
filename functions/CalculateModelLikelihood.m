@@ -40,8 +40,8 @@ if structure == "linear"
     for i = 1:n-1 % smallest node index
         for j = i+1:n % largest node index
              %calculate incoherene of nodes
-            I(i,j) = (x(i)-x(j))^2;        
-            I(j,i) = (x(i)-x(j))^2;        
+            I(i,j) = norm(x(i,:)-x(j,:))^2;        
+            I(j,i) = norm(x(i,:)-x(j,:))^2;    
 
         end
     end

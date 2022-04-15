@@ -16,10 +16,7 @@
 %c2 = 1/2;
 %c3 = 1/3;
 
-function [x_est, V, lambda] = LinearHypergraphEmbedding(W2, W3, c2, c3, norm)
-
-
-
+function [x_est, V, lambda] = LinearHypergraphEmbedding(W2, W3, c2, c3, norm, n_vec)
 
 % calculate degree matrix D2 and D3
 d2 = sum(W2, 2); D2 = diag(d2);
@@ -39,7 +36,11 @@ L = c2*L2 + c3*L3;
 
 % solve eigenvectors
 [V, lambda] = eigs(L,size(L,1),'smallestabs'); % all eigenvectors ranging from smallest eigenvalue to largest eigenvalue
-x_est = V(:,2);
+start_idx = find(diag(lambda)>=0.01,1);
+x_est = V(:,start_idx:start_idx+n_vec-1);
+
+%x_est = V(:,2:1+n_vec);
+%x_est = V(:,find(diag(lambda)>=0.01,1)); % use eigenvector with more positive eigenvalues
 
 %{
 eigenvalues = diag(lambda);

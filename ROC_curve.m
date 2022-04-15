@@ -7,25 +7,24 @@ addpath 'functions';
 set(groot,'defaultFigureVisible','off') % 'on' to turn back on.  
 tic
 
+%parameter for synthetic graph
 K = 9; %number of clusters
-
-
-c2 = 1; % weight of simple edge
-c3_array = 0:0.3:1;
-gamma_array = 0.5; % gamma for likelihood plot
-data_name = "contact-primary-school";
-train_ratio = 0.8;
-train_file = strcat('processed_data/', data_name,'_train.mat');
-test_file = strcat('processed_data/', data_name,'_test.mat');
-m = 20; % number of nodes per cluster
 gamma_inp = 18; % decay parameter for synthetic networks
 c2_inp = 1;
 c3_inp = 1/3;
-%%%%%%%%% Parameters only applicable to synthetic graphs %%%%%%%%%
+
+c2 = 1; % weight of diadic edge
+c3_array = 0.5; % weight of triadic edge
+gamma_array = 1; % gamma for likelihood plot
+data_name = "contact-high-school";
+train_ratio = 0.2;
+train_file = strcat('processed_data/', data_name,'_train_', num2str(train_ratio),'.mat');
+test_file = strcat('processed_data/', data_name,'_test_',num2str(1-train_ratio),'.mat');
+m = 10; % number of nodes per cluster
+
 if data_name == "synthetic_lin" || data_name == "synthetic_per"
-    n = K*m; % total number of nodes
+    n_nodes = K*m; % total number of nodes
 end
-%%%%%%%%%%%%%%%%%%%%%% 
 
 rand_linear = [];
 rand_periodic = [];
@@ -40,18 +39,17 @@ lnP_linear = zeros(length(c3_array),length(gamma_array));
 lnP_periodic = zeros(length(c3_array),length(gamma_array));
 
 
-
+% load data
 if ismember (data_name, ["contact-high-school", "contact-primary-school", "coauth-DBLP", "email-Eu", "email-Enron" ] )
-    %if  ~isfile(train_file) || ~isfile(test_file)
-        [train_list, test_list, n] = SplitData(data_name,train_ratio);
-        [W2, W3, T3, E2, E3] = LoadSimplex(train_list, n);
-        save(strcat('processed_data/', data_name, '_train'),'W2', 'W3', 'T3', 'E2', 'E3');
-        [W2, W3, T3, E2, E3] = LoadSimplex(test_list, n);
-        save(strcat('processed_data/', data_name, '_test'),'W2', 'W3', 'T3', 'E2', 'E3');
-    %end
+    if  ~isfile(train_file) || ~isfile(test_file)
+        [train_list, test_list, n_nodes] = SplitData(data_name,train_ratio); %split data into train and test by time
+        [W2, W3, T3, E2, E3] = LoadSimplex(train_list, n_nodes); %save list of simplices into matrix
+        save(train_file,'W2', 'W3', 'T3', 'E2', 'E3');
+        [W2, W3, T3, E2, E3] = LoadSimplex(test_list, n_nodes);
+        save(test_file,'W2', 'W3', 'T3', 'E2', 'E3');
+    end
     train = load(train_file,'W2', 'W3', 'T3', 'E2', 'E3');
     test  = load(test_file,'W2', 'W3', 'T3', 'E2', 'E3');
-    n = size(test.W2,1);
 elseif data_name == "senate_bill"
     if isfile(filename)
         load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
@@ -64,15 +62,17 @@ elseif data_name == "synthetic_lin"
      %   load(filename,'W2', 'W3', 'T3', 'label')
     %else
         a = 0.01; % noise parameter
-        x = sort(repmat(linspace(0,2, K),1,m)+(2*a*rand(1,n)-a)); % input node embedding
+        x = sort(repmat(linspace(0,2, K),1,m)+(2*a*rand(1,n_nodes)-a)); % input node embedding
         [E2, E3, W2, W3, T3] = GenerateLinearHypergraph(x, gamma_inp, c2_inp, c3_inp);   
-        label = repmat(linspace(1,K,K),1,m);
-        split_index = randperm(n, round(train_ratio*n));
-        save('processed_data/synthetic_lin','W2', 'W3', 'T3', 'label');
+        save(strcat('processed_data/', data_name, '_train'),'W2', 'W3', 'T3', 'E2', 'E3');
+        [E2, E3, W2, W3, T3] = GenerateLinearHypergraph(x, gamma_inp, c2_inp, c3_inp);   
+        save(strcat('processed_data/', data_name, '_test'),'W2', 'W3', 'T3', 'E2', 'E3');
+        train = load(train_file,'W2', 'W3', 'T3', 'E2', 'E3');
+        test  = load(test_file,'W2', 'W3', 'T3', 'E2', 'E3');
     %end
 elseif data_name == "synthetic_per"
     a = 0.01*pi; % noise parameter
-    x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n)-a)); % angles from -pi to pi
+    x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n_nodes)-a)); % angles from -pi to pi
     [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma_inp, c2_inp, c3_inp);
     label = repmat(linspace(1,K,K),1,m);
 
@@ -97,7 +97,7 @@ set(gca,'FontSize',30) ;
 ax = gca;% Requires R2020a or later
 exportgraphics(ax,strcat('plots/',data_name,'_gamma=', num2str(gamma_inp),'_input_W3_c3_',num2str(round(c3_inp,2)),'.eps'),'Resolution',300) 
 
-
+% check number of nodes and edge/triangle density
 n_nodes = size(train.W2,2);
 n_edge = sum(train.W2,'all')/2;
 n_triangle = sum(train.T3, 'all')/6;
@@ -111,14 +111,15 @@ W2_in = train.W2;
 W3_in = train.W3;
 T3_in = train.T3;
 
+
 for ii = 1:length(c3_array)
     c3 = c3_array(ii);
     norm_eta = c2*n_edge + c3*n_triangle;
 
     
-    %estimate embedding using linear spectral clustering
-    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false");
-    [x_est_periodic] = PeriodicHypergraphEmbedding(W2_in, W3_in, c2, c3, "false");
+    %estimate embedding using linear spectral clustering 
+    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", 3); %don't normalize
+    [x_est_periodic] = PeriodicHypergraphEmbedding(W2_in, W3_in, c2, c3, "false",3);
                 
     
     %calculate eta
@@ -143,6 +144,8 @@ for ii = 1:length(c3_array)
     W2_reorder_periodic = W2_in(idx_periodic,idx_periodic);
     W3_reorder_periodic = W3_in(idx_periodic,idx_periodic);
 
+    
+    
     for jj = 1:length(gamma_array)
         gamma = gamma_array(jj);
         [lnP_linear(ii,jj), ~] = CalculateModelLikelihood(x_est_linear, W2_in, T3_in, c2, c3, gamma, "linear");
@@ -155,23 +158,13 @@ for ii = 1:length(c3_array)
     
     [~, ~, P_edge_lin, P_triangles_lin] = CalculateModelLikelihood(x_est_linear, W2_in, T3_in, c2, c3, gamma_max_linear, "linear");
     
-    %predict edge
-    [X,Y,T,AUC_edge_lin(end+1)] = perfcurve(test.W2(:),P_edge_lin(:),1,'XCrit','reca','YCrit','prec');
-    plot(X,Y)
-    xlabel('Recall') 
-    ylabel('Precision')
-    title('ROC for edge prediction (linear)')
-    set(gca,'fontsize',30);
-    ax = gca;
-    exportgraphics(ax,strcat('plots/ROC_edge_lin_', data_name,'_c2_',num2str(round(c2,2)),'_c3_',num2str(round(c3,2)),'.eps'),'Resolution',300) 
-
     
     %find indices of open triangles
     trg_open_idx = find(1-train.T3(:));
     
     %triangle
-    [X,Y,T,AUC_triangle_lin(end+1)] = perfcurve(test.T3(trg_open_idx),P_triangles_lin(trg_open_idx),1,'XCrit','reca','YCrit','prec');
-    plot(X,Y)
+    [X_lin,Y_lin,T_lin,AUC_triangle_lin(end+1)] = perfcurve(test.T3(trg_open_idx),P_triangles_lin(trg_open_idx),1,'XCrit','reca','YCrit','prec');
+    plot(X_lin,Y_lin)
     xlabel('Recall') 
     ylabel('Precision')
     title('ROC for triangle prediction (linear)')
@@ -184,20 +177,10 @@ for ii = 1:length(c3_array)
     gamma_max_periodic = gamma_array(max_periodic_idx); 
     [~, ~, P_edge_per, P_triangles_per] = CalculateModelLikelihood(x_est_periodic, W2_in, T3_in, c2, c3, gamma_max_periodic, "periodic");
     
-    %predict edge
-    [X,Y,T,AUC_edge_per(end+1)] = perfcurve(test.W2(:),P_edge_per(:),1,'XCrit','reca','YCrit','prec');
-    plot(X,Y)
-    xlabel('Recall') 
-    ylabel('Precision')
-    title('ROC for edge prediction (periodic)')
-    set(gca,'fontsize',30);
-    ax = gca;
-    exportgraphics(ax,strcat('plots/ROC_edge_per_', data_name,'_c2_',num2str(round(c2,2)),'_c3_',num2str(round(c3,2)),'.eps'),'Resolution',300) 
-
     
     %triangle
-    [X,Y,T,AUC_triangle_per(end+1)] = perfcurve(test.T3(trg_open_idx),P_triangles_per(trg_open_idx),1,'XCrit','reca','YCrit','prec');
-    plot(X,Y)
+    [X_per,Y_per,T_per,AUC_triangle_per(end+1)] = perfcurve(test.T3(trg_open_idx),P_triangles_per(trg_open_idx),1,'XCrit','reca','YCrit','prec');
+    plot(X_per,Y_per)
     xlabel('Recall') 
     ylabel('Precision')
     title('ROC for triangle prediction (periodic)')
@@ -223,6 +206,7 @@ for ii = 1:length(c3_array)
 
 end
 
+
 plt = plot(c3_array, max_lnP_linear, 'b', 'LineWidth',1.5);
 hold on;
 plot(c3_array, max_lnP_periodic, '-r', 'LineWidth',1.5);
@@ -234,17 +218,7 @@ ax = gca;
 exportgraphics(ax,strcat('plots/max_lnP', data_name,'_c2_',num2str(round(c2,2)),'.eps'),'Resolution',300) 
 hold off;
 
-% AUC for edge prediction
-plt = plot(c3_array, AUC_edge_lin, 'b', 'LineWidth',1.5);
-hold on;
-plot(c3_array, AUC_edge_per, '-r', 'LineWidth',1.5);
-legend({'Linear','Periodic'},'FontSize', 20,'Location','best');
-xlabel('c_3','FontSize', 13);
-ylabel('AUC for edge prediction','FontSize', 13);
-set(gca,'fontsize',30);
-ax = gca;
-exportgraphics(ax,strcat('plots/AUC_edge_', data_name,'_c2_',num2str(round(c2,2)),'_gamma_',num2str(round(gamma_inp,2)),'.eps'),'Resolution',300) 
-hold off;
+
 
 % AUC for triange prediction
 plt = plot(c3_array, AUC_triangle_lin, 'b', 'LineWidth',1.5);
@@ -253,7 +227,6 @@ plot(c3_array, AUC_triangle_per, '-r', 'LineWidth',1.5);
 legend({'Linear','Periodic'},'FontSize', 20,'Location','best');
 xlabel('c_3','FontSize', 13);
 ylabel('AUC for triangle prediction','FontSize', 13);
-set(gca,'fontsize',30);
 ax = gca;
 exportgraphics(ax,strcat('plots/AUC_triangle_', data_name,'_c2_',num2str(round(c2,2)),'_gamma_',num2str(round(gamma_inp,2)),'.eps'),'Resolution',300) 
 hold off;
@@ -280,20 +253,109 @@ ax = gca;% Requires R2020a or later
 caxis([-2000000, 0]);
 exportgraphics(ax,strcat('plots/lnP_periodic_', data_name,'_c2_',num2str(round(c2,2)),'.eps'),'Resolution',300) 
 
-score_arith = CalculateArithMean(test.W3);
-score_harm = CalculateHarmMean(test.W3);
-score_geom = CalculateGeoMean(test.W3);
 
 
-[X,Y,T,AUC_triangle_arith] = perfcurve(test.T3(trg_open_idx),score_arith(trg_open_idx),1,'XCrit','reca','YCrit','prec');
-[X,Y,T,AUC_triangle_harm] = perfcurve(test.T3(trg_open_idx),score_harm(trg_open_idx),1,'XCrit','reca','YCrit','prec');
-[X,Y,T,AUC_triangle_geo] = perfcurve(test.T3(trg_open_idx),score_geom(trg_open_idx),1,'XCrit','reca','YCrit','prec');
-[X,Y,T,AUC_triangle_rand] = perfcurve(test.T3(trg_open_idx), rand(size(trg_open_idx)),1,'XCrit','reca','YCrit','prec');
+%%%%%% ROC for mean scores %%%%%%%%%
+score_arith = CalculateArithMean(train.W3);
+score_harm = CalculateHarmMean(train.W3);
+score_geom = CalculateGeoMean(train.W3);
 
-[X,Y,T,AUC_edge_rand] = perfcurve(test.W2(:), rand(n*n,1),1,'XCrit','reca','YCrit','prec');
-[X,Y,T,AUC_edge_mean] = perfcurve(test.W2(:), test.W2(:),1,'XCrit','reca','YCrit','prec');
+%%%%%%%%% arithmetic mean %%%%%%%%%%%
+[X_arith,Y_arith,T_arith,AUC_triangle_arith] = perfcurve(test.T3(trg_open_idx),score_arith(trg_open_idx),1,'XCrit','reca','YCrit','prec','TVals', linspace(max(score_arith(trg_open_idx), [], 'all'),1/3));
+arith_open = score_arith(trg_open_idx);
+arith_sort = sort(arith_open); [~,~,min_nonzero] = find(arith_sort,1); % find the smallest non-zero
+arith_zero_idx = find(arith_open==0); % index with zero score
+arith_open(arith_zero_idx) = rand(length(arith_zero_idx),1)*min_nonzero; %random number from 0 to smallest non-zero
+%plot new ROC curve
+[X_harm,Y_harm,T_harm,AUC_triangle_arith_shuffle] = perfcurve(test.T3(trg_open_idx),arith_open,1,'XCrit','reca','YCrit','prec');
+
+
+%%%%%%%%%% harmonic mean %%%%%%%%%%%%
+[X_harm,Y_harm,T_harm,AUC_triangle_harm] = perfcurve(test.T3(trg_open_idx),score_harm(trg_open_idx),1,'XCrit','reca','YCrit','prec','TVals', linspace(max(score_harm(trg_open_idx), [], 'all'),1));
+% assign random score from 0 to 1 to triplets with score_harm = 0
+harm_open = score_harm(trg_open_idx);
+harm_sort = sort(harm_open); [~,~,min_nonzero] = find(harm_sort,1); % find the smallest non-zero
+harm_zero_idx = find(harm_open==0); % index with zero score
+harm_open(harm_zero_idx) = rand(length(harm_zero_idx),1)*min_nonzero; %random number from 0 to smallest non-zero
+%plot new ROC curve
+[X_harm,Y_harm,T_harm,AUC_triangle_harm_shuffle] = perfcurve(test.T3(trg_open_idx),harm_open,1,'XCrit','reca','YCrit','prec');
+
+
+%%%%%%%% geometric mean %%%%%%%%%
+[X_geo,Y_geo,T_geo, AUC_triangle_geo] = perfcurve(test.T3(trg_open_idx),score_geom(trg_open_idx),1,'XCrit','reca','YCrit','prec','TVals', linspace(max(score_geom(trg_open_idx), [], 'all'),1));
+% assign random score from 0 to 1 to triplets with score_harm = 0
+geom_open = score_geom(trg_open_idx);
+geo_sort = sort(geom_open); [~,~,min_nonzero] = find(geo_sort,1); % find the smallest non-zero
+geo_zero_idx = find(geom_open==0); % index with zero score
+geom_open(geo_zero_idx) = rand(length(geo_zero_idx),1)*min_nonzero; %random number from 0 to smallest non-zero
+%plot new ROC curve
+[X_geo,Y_geo,T_geo, AUC_triangle_geo_shuffle] = perfcurve(test.T3(trg_open_idx),geom_open,1,'XCrit','reca','YCrit','prec');
+
+
+%%%%%% random score %%%%%%%%%%
+[X_rand,Y_rand,T_rand, AUC_triangle_rand] = perfcurve(test.T3(trg_open_idx), rand(size(trg_open_idx)),1,'XCrit','reca','YCrit','prec');
+plot(X_rand,Y_rand)
+xlabel('Recall') 
+ylabel('Precision')
+title('Triangle prediction ROC (rand)')
+set(gca,'fontsize',15)
+ax = gca;
+exportgraphics(ax,strcat('plots/ROC_triangle_rand_', data_name,'_c2_',num2str(round(c2,2)),'_c3_',num2str(round(c3,2)),'.eps'),'Resolution',300) 
+
+
+%plot periodic embedding
+scatter(sin(sort(x_est_periodic)), cos(sort(x_est_periodic)))
+xlim([-1 1])
+ylim([-1 1])
+shg
+
+% among test data,  how many of triangles have zero mean geometric mean
+triangle_idx = find(test.T3(:)==1);
+zero_geom_idx = find(score_geom == 0);
+[val,pos]=intersect(triangle_idx,zero_geom_idx);
+length(pos);
+length(pos)/length(triangle_idx);
+
+
+plot(X_lin,Y_lin,'Marker','s')
+hold on
+plot(X_geo,Y_geo,'Marker','s')
+plot(X_harm,Y_harm,'Marker','s')
+hold off
+xlabel('Recall')
+ylabel('Precision')
+title('ROC curve')
+legend('Linear model', 'Geometric Mean', 'Harmonic Mean')
+shg
+
+
+%plot area under curve
+area(X_lin,Y_lin, 'FaceAlpha', 0.8);
+%yyaxis right
+hold on
+area(X_geo,Y_geo, 'FaceAlpha', 0.8);
+area(X_harm,Y_harm, 'FaceAlpha', 0.8);
+ax = gca;
+exportgraphics(ax,strcat('plots/ROC_comparison_', data_name,'_c2_',num2str(round(c2,2)),'_c3_',num2str(round(c3,2)),'.eps'),'Resolution',300) 
+
+%plot area under curve
+area(X_geo,Y_geo, 'FaceAlpha', 0.8);
+%yyaxis right
+hold on
+area(X_lin,Y_lin, 'FaceAlpha', 0.8);
+legend('Geometric score', 'Linear model')
+xlabel('Recall') 
+ylabel('Precision')
+%area(X_harm,Y_harm, 'FaceAlpha', 0.8);
+ax = gca;
+set(gca,'fontsize',20)
+exportgraphics(ax,strcat('plots/ROC_comparison_', data_name,'_train_',num2str(round(train_ratio,2)),'.eps'),'Resolution',300) 
+hold off
+
+%load handel
+%sound(y,Fs)
+
+%}
 
 
 toc
-%load handel
-%sound(y,Fs)

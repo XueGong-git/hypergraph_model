@@ -14,7 +14,7 @@
 function [E2, E3, W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, no_triangle)
 
 if ~exist('no_triangle','var')
- % third parameter does not exist, so default it to something
+ % third parameter does not exist, so default it to 0
   no_triangle = 0;
 end
 n = length(x);

@@ -33,7 +33,7 @@ if isfile(filename)
 else
     if data_type == "highschool"
         [W2, W3, T3, E2, E3] = LoadHighSchool();
-        label = readtable('data/highschool_label', 'ReadVariableNames', false);
+        label = readtable('raw_data/highschool_label', 'ReadVariableNames', false);
         save('highschool','W2', 'W3', 'T3', 'E2', 'E3','label');
     elseif data_type == "senate_bill"
         [W2, W3, T3, E2, E3] = LoadSenateBill();
@@ -67,7 +67,7 @@ for ii = 1:length(c3_array)
     saveas(f,strcat('plots/highschool_degree_eff_c3=',num2str(round(c3,2)),'.eps'));
 
     %trim  nodes with highest degrees
-    keepIDs = (degree_eff< max(degree_eff)*0.5) & (degree_eff> min(degree_eff)*4);
+    keepIDs = (degree_eff< max(degree_eff)*1.5) & (degree_eff> min(degree_eff)*0.4);
     W2 = W2_in(keepIDs, keepIDs);
     T3 = T3_in(keepIDs, keepIDs, keepIDs);
     W3 = sum(T3, 3);

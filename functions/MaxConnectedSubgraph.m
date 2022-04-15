@@ -4,7 +4,7 @@ function [xmax, W2max, W3max, T3max] = MaxConnectedSubgraph(x, c2, c3, W2, W3, T
 
 
     % keep the largest connected graph
-    G = graph(c2*W2 + c3*W3); % build hypergraph Laplacian
+    G = graph(c2*W2 + c3*W3); % build combined adjacency matrix
 
 
     comp = conncomp(G);% find connected components
