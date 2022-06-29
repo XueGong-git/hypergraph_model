@@ -11,95 +11,120 @@
 % OUTPUTS
 % - (A2, A3)       Hypergraph -- with a matrix + a tensor
 
-function [E2, E3, W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, no_triangle)
+function [E2, W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3, no_triangle, data_name)
 
 if ~exist('no_triangle','var')
  % third parameter does not exist, so default it to 0
   no_triangle = 0;
 end
 n = length(x);
-I = zeros(n);
-f = zeros(n);
 
-E2 = []; % edge list
-W2 = zeros(n); % 2nd order adjacency matrix  
+size_lcc = 0;
 
-E3 = []; % edge list
-W3 = zeros(n); % 2nd order adjacency matrix  
-T3 = zeros(n,n,n);
+while size_lcc < n
+    
+
+    I = zeros(n);
+    f = zeros(n);
+
+    E2 = []; % edge list
+    W2 = zeros(n); % 2nd order adjacency matrix  
+
+    E3 = []; % edge list
+    W3 = zeros(n); % 2nd order adjacency matrix  
+    T3 = zeros(n,n,n);
+
+    times = [];
+    times_idx = 0;
+    nverts = [];
+    simplices = [];
 
 
 
-
-%calculate pairwise incoherence
-for i = 1:n-1 % smallest node index
-    for j = i+1:n % largest node index
-        %calculate incoherene of nodes
-        I(i,j) = (x(i)-x(j))^2;        
-    end
-end
-
-
-%generate simple edges
-for i = 1:n-1 % smallest node index
-    for j = i+1:n % largest node index
-        %calculate likelihood
-        f(i,j) = 1/(1+exp(gamma*c2*I(i,j)));
-          if rand() < f(i,j)
-                %E2(end+1,:) = [x(i),x(j)];
-                %E2(end+1,:) = [x(j),x(i)];
-                W2(i,j)=1; %only fill uppder triangle
-                
-                E2(end+1,:) = [i,j];
-                E2(end+1,:) = [j,i];
-            
-         end
-    end
-end
-W2 = W2 + W2'; % get a symmetric matrix
-
-if ~no_triangle
-%generate  hyperedges that connect 3 nodes
-for i = 1:n-2 % smallest node index
-    for j = i+1:n-1 % second smallest index
-        for k = j+1:n % largest node index
+    %calculate pairwise incoherence
+    for i = 1:n-1 % smallest node index
+        for j = i+1:n % largest node index
             %calculate incoherene of nodes
-            I_R = I(i,j)+ I(i,k) + I(j,k);
-            f(i,j,k) = 1/(1+exp(gamma*c3*I_R));
-            if rand() < f(i,j,k)
-                T3(i,j,k) = 1; %tensor
-                T3(i,k,j) = 1; %tensor
-                T3(j,i,k) = 1; %tensor
-                T3(j,k,i) = 1; %tensor
-                T3(k,i,j) = 1; %tensor
-                T3(k,j,i) = 1; %tensor
-                %E3(end+1,:) = [x(i),x(j),x(k)];
-                %E3(end+1,:) = [x(j),x(k),x(i)];
-                %E3(end+1,:) = [x(k),x(i),x(j)];
-                %E3(end+1,:) = [x(k),x(j),x(i)];
-                %E3(end+1,:) = [x(j),x(i),x(k)];
-                %E3(end+1,:) = [x(i),x(k),x(j)];
-                
-                % 3rd order adjacency matrix, only fill the upper triangle
-                W3(i,j)= W3(i,j)+1;
-                W3(i,k)= W3(i,k)+1;
-                W3(j,k)= W3(j,k)+1;
-                
-                
-                E3(end+1,:) = [i,j,k];
-                E3(end+1,:) = [j,k,i];
-                E3(end+1,:) = [k,i,j];
-                E3(end+1,:) = [k,j,i];
-                E3(end+1,:) = [j,i,k];
-                E3(end+1,:) = [i,k,j];
-                
+            I(i,j) = (x(i)-x(j))^2;        
+        end
+    end
+
+
+    %generate simple edges
+    for i = 1:n-1 % smallest node index
+        for j = i+1:n % largest node index
+            %calculate likelihood
+            f(i,j) = 1/(1+exp(gamma*c2*I(i,j)));
+              if rand() < f(i,j)
+                    %E2(end+1,:) = [x(i),x(j)];
+                    %E2(end+1,:) = [x(j),x(i)];
+                    W2(i,j)=1; %only fill uppder triangle
+
+                    E2(end+1,:) = [i,j];
+                    E2(end+1,:) = [j,i];
+
+                    % update the simplex list
+                    times_idx = times_idx + 1;
+                    nverts(end + 1) = 2;
+                    simplices(end + 1) = i;
+                    simplices(end + 1) = j;
+
+             end
+        end
+    end
+    W2 = W2 + W2'; % get a symmetric matrix
+
+    if no_triangle ~= 0
+    %generate  hyperedges that connect 3 nodes
+    for i = 1:n-2 % smallest node index
+        for j = i+1:n-1 % second smallest index
+            for k = j+1:n % largest node index
+                %calculate incoherene of nodes
+                I_R = I(i,j)+ I(i,k) + I(j,k);
+                f(i,j,k) = 1/(1+exp(gamma*c3*I_R));
+                if rand() < f(i,j,k)
+                    T3(i,j,k) = 1; %tensor
+                    T3(i,k,j) = 1; %tensor
+                    T3(j,i,k) = 1; %tensor
+                    T3(j,k,i) = 1; %tensor
+                    T3(k,i,j) = 1; %tensor
+                    T3(k,j,i) = 1; %tensor
+
+                    % 3rd order adjacency matrix, only fill the upper triangle
+                    W3(i,j)= W3(i,j)+1;
+                    W3(i,k)= W3(i,k)+1;
+                    W3(j,k)= W3(j,k)+1;
+
+
+                    %E3(end+1,:) = [i,j,k];
+                    %E3(end+1,:) = [j,k,i];
+                    %E3(end+1,:) = [k,i,j];
+                    %E3(end+1,:) = [k,j,i];
+                    %E3(end+1,:) = [j,i,k];
+                    %E3(end+1,:) = [i,k,j];
+
+                    % update the simplex list
+                    times_idx = times_idx + 1;
+                    nverts(end + 1) = 3;
+                    simplices(end + 1) = i;
+                    simplices(end + 1) = j;
+                    simplices(end + 1) = k;
+
+
+                end
             end
         end
     end
+    end
+    %get a symmetric adjacency matirx
+    W3 = W3 + W3';
+    
+    % check if the hypergraph is connected
+    [x, ~] = MaxConnectedSubgraph(x, c2, c3, W2, W3, T3);   
+    size_lcc = size(x, 2);
 end
-end
-%get a symmetric adjacency matirx
-W3 = W3 + W3';
+
+% output lists of hyperedges
 
 %{
 %%%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%%%%%
@@ -137,5 +162,22 @@ exportgraphics(ax,strcat('plots/linear_hygraph_W3_', data_type,'_gamma=', num2st
 
 %%%%%%%%%%%%%%%%%%%%%%%%% END OF PLOTS %%%%%%%%%%%%%%%%%%%%%%%%
 %}
+if exist('data_name','var')
+    %time
+    times = randperm(times_idx); % randomly assign a timestamp
+    fid = fopen(strcat('raw_data/', data_name,'/', data_name, '-times.txt'),'w+');
+    fprintf(fid,'%d\n',times');
+    fclose(fid);
+    
+    %nverts
+    fid = fopen(strcat('raw_data/', data_name,'/', data_name, '-nverts.txt'),'w+');
+    fprintf(fid,'%d\n',nverts');
+    fclose(fid);
+    
+    %nverts
+    fid = fopen(strcat('raw_data/', data_name,'/', data_name, '-simplices.txt'),'w+');
+    fprintf(fid,'%d\n',simplices');
+    fclose(fid);
+end
 
 end

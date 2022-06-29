@@ -37,11 +37,11 @@ I3 = zeros(n,n,n); %incoherence between tripples of nodes
 
 if structure == "linear"
 %calculate pairwise incoherence
-    for i = 1:n-1 % smallest node index
-        for j = i+1:n % largest node index
+    for ii = 1:n-1 % smallest node index
+        for jj = ii+1:n % largest node index
              %calculate incoherene of nodes
-            I(i,j) = norm(x(i,:)-x(j,:))^2;        
-            I(j,i) = norm(x(i,:)-x(j,:))^2;    
+            I(ii,jj) = norm(x(ii,:)-x(jj,:))^2;        
+            I(jj,ii) = norm(x(ii,:)-x(jj,:))^2;    
 
         end
     end

@@ -73,26 +73,18 @@ for i = 1:n-2 % smallest node index
                 T3(k,j,i) = 1; %tensor
 
                 % edge list
-                E3(end+1,:) = [x(i),x(j),x(k)]; 
-                E3(end+1,:) = [x(j),x(k),x(i)];
-                E3(end+1,:) = [x(k),x(i),x(j)];
-                E3(end+1,:) = [x(k),x(j),x(i)];
-                E3(end+1,:) = [x(j),x(i),x(k)];
-                E3(end+1,:) = [x(i),x(k),x(j)];
+                %E3(end+1,:) = [x(i),x(j),x(k)]; 
+                %E3(end+1,:) = [x(j),x(k),x(i)];
+                %E3(end+1,:) = [x(k),x(i),x(j)];
+                %E3(end+1,:) = [x(k),x(j),x(i)];
+                %E3(end+1,:) = [x(j),x(i),x(k)];
+                %E3(end+1,:) = [x(i),x(k),x(j)];
                 
                 % 3rd order adjacency matrix, only fill the upper triangle
                 W3(i,j)= W3(i,j)+1;
                 W3(i,k)= W3(i,k)+1;
                 W3(j,k)= W3(j,k)+1;
                 
-                %{
-                E3(end+1,:) = [i,j,k];
-                E3(end+1,:) = [j,k,i];
-                E3(end+1,:) = [k,i,j];
-                E3(end+1,:) = [k,j,i];
-                E3(end+1,:) = [j,i,k];
-                E3(end+1,:) = [i,k,j];
-                %}
             end
         end
     end

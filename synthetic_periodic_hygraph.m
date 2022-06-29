@@ -10,15 +10,14 @@ a = 0.05*pi; % noise;
 
 c2 = 1/2; % weight of simple edge
 c3 = 1/3; % weight of simple edge
-gamma_input = [ 5]; % gamma for generating graph
+gamma_input = 4; % gamma for generating graph
 gamma_array = 0:0.25:8; % gamma for likelihood plot
 rand_linear = [];
 rand_periodic = [];
 
 
 
-
-for input = 1
+for input = 
     for gamma = gamma_input
         
         switch input
@@ -52,105 +51,6 @@ for input = 1
         set(gca,'ColorScale','log')
         ax = gca;% Requires R2020a or later
         exportgraphics(ax,strcat('plots/periodic_',data_type,'_W3_input_.eps'),'Resolution',300) 
-
-
-        %{
-        % eigenvalues of L2 and L3
-        d2 = sum(W2, 2); D2 = diag(d2);
-        d3 = sum(W3, 2); D3 = diag(d3);
-        [V2, lambda2] = eigs(D2-W2,n,'smallestabs'); % all eigenvectors ranging from smallest eigenvalue to largest eigenvalue
-        [V3, lambda3] = eigs(D3-W3,n,'smallestabs'); % all eigenvectors ranging from smallest eigenvalue to largest eigenvalue
-        [VL, lambdaL] = eigs((D2-W2)/2 + (D3-W3)/3,n,'smallestabs'); % all eigenvectors ranging from smallest eigenvalue to largest eigenvalue
-
-        %plot L2 eigenvalues
-        eigenvalues2 = diag(lambda2);
-        scatter(1:n, eigenvalues2(1:n), 100, 'MarkerFaceColor','black');
-        xlabel('i','FontSize', 13);
-        ylabel('Eigenvalue \lambda_i','FontSize', 13);
-        set(gca,'fontsize',30);
-        ax = gca;
-        exportgraphics(ax,strcat('plots/periodic_',data_type,'_L2_eigenvalues.eps'),'Resolution',300) 
-
-        % plot L3 eigenvalues
-        eigenvalues3 = diag(lambda3);
-        scatter(1:n, eigenvalues3(1:n), 100, 'MarkerFaceColor','black');
-        xlabel('i','FontSize', 13);
-        ylabel('Eigenvalue \lambda_i','FontSize', 13);
-        set(gca,'fontsize',30);
-        ax = gca;
-        exportgraphics(ax,strcat('plots/periodic_',data_type,'_L3_eigenvalues.eps'),'Resolution',300) 
-
-        % plot  eigenvectors of L2
-        t = tiledlayout(4,1);
-        ax1 = nexttile;
-        plot(V2(:,1), 'Color', 'black');
-        ylabel('v_0')
-        ax2 = nexttile;
-        plot(V2(:,2), 'Color', 'black');
-        ylabel('v_1')
-        ax3 = nexttile;
-        plot(V2(:,3), 'Color', 'black');
-        ylabel('v_2')
-        ax4 = nexttile;
-        plot(V2(:,4), 'Color', 'black');
-        ylabel('v_3')
-        % Link the axes
-        linkaxes([ax1,ax2,ax3,ax4],'x');
-        linkaxes([ax1,ax2,ax3,ax4],'y');
-        % Move plots closer together
-        xticklabels(ax1,{})
-        t.TileSpacing = 'compact';
-        axis([0 n -1 1])
-        exportgraphics(t,strcat('plots/periodic_',data_type,'_L2_eigenvectors.eps'),'Resolution',300) 
-
-
-        % plot  eigenvectors of L3
-        t = tiledlayout(4,1);
-        ax1 = nexttile;
-        plot(V3(:,1), 'Color', 'black');
-        ylabel('v_0')
-        ax2 = nexttile;
-        plot(V3(:,2), 'Color', 'black');
-        ylabel('v_1')
-        ax3 = nexttile;
-        plot(V3(:,3), 'Color', 'black');
-        ylabel('v_2')
-        ax4 = nexttile;
-        plot(V3(:,4), 'Color', 'black');
-        ylabel('v_3')
-        % Link the axes
-        linkaxes([ax1,ax2,ax3,ax4],'x');
-        linkaxes([ax1,ax2,ax3,ax4],'y');
-        % Move plots closer together
-        xticklabels(ax1,{})
-        t.TileSpacing = 'compact';
-        axis([0 n -1 1])
-        exportgraphics(t,strcat('plots/periodic_',data_type,'_L3_eigenvectors.eps'),'Resolution',300) 
-
-        
-        % plot  eigenvectors of L
-        t = tiledlayout(4,1);
-        ax1 = nexttile;
-        plot(VL(:,1), 'Color', 'black');
-        ylabel('v_0')
-        ax2 = nexttile;
-        plot(VL(:,2), 'Color', 'black');
-        ylabel('v_1')
-        ax3 = nexttile;
-        plot(VL(:,3), 'Color', 'black');
-        ylabel('v_2')
-        ax4 = nexttile;
-        plot(VL(:,4), 'Color', 'black');
-        ylabel('v_3')
-        % Link the axes
-        linkaxes([ax1,ax2,ax3,ax4],'x');
-        linkaxes([ax1,ax2,ax3,ax4],'y');
-        % Move plots closer together
-        xticklabels(ax1,{})
-        t.TileSpacing = 'compact';
-        axis([0 n -1 1])
-        exportgraphics(t,strcat('plots/periodic_',data_type,'_L_eigenvectors.eps'),'Resolution',300) 
- %}
 
         
         %shuffle input adjacency matrix

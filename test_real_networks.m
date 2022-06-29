@@ -9,7 +9,7 @@ tic
 
 
 c2 = 0; % weight of simple edge
-c3_array = 0.1:0.1:1;
+c3_array = 0.3;
 gamma_array = 0:0.2:2; % gamma for likelihood plot
 data_type = "highschool";
 K = 9;
@@ -82,7 +82,7 @@ for ii = 1:length(c3_array)
 
     
     %estimate embedding using linear spectral clustering
-    [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false");
+    [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false", 3);
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, "false");
                 
     
@@ -341,7 +341,6 @@ for ii = 1:length(c3_array)
 end
 
 %{
-
 %plot rand index
 plt = plot(c3_array, rand_linear, 'b', 'LineWidth',1.5);
 hold on;
@@ -355,6 +354,7 @@ ax = gca;
 exportgraphics(ax,strcat('plots/rand_linear_', data_type,'.eps'),'Resolution',300) 
 hold off;
 %}
+
 plt = plot(c3_array, max_lnP_linear, 'b', 'LineWidth',1.5);
 hold on;
 plot(c3_array, max_lnP_periodic, '-r', 'LineWidth',1.5);

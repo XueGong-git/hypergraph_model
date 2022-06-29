@@ -8,15 +8,15 @@ set(groot,'defaultFigureVisible','off') % 'on' to turn back on.
 tic
 
 
-n = 100;
+n = 250;
 K = 5; % number of clusters 
-ntrial = 40;
+ntrial = 1;
 
 c2 = 1; % weight of simple edge
-gamma_array = 0.5; % gamma for likelihood plot
-gamma_input = 0.5; % gamma for generating graph
-c3_inp_array = 0:0.1:0.4; % weight of triangles for input graph
-c3_inv_array = 0:0.1:0.4; % weight of triangles for inverse problem
+gamma_array = 1; % gamma for likelihood plot
+gamma_input = 1; % gamma for generating graph
+c3_inp_array = 0:0.1:1; % weight of triangles for input graph
+c3_inv_array = 0:0.1:1; % weight of triangles for inverse problem
 
 for input_shape = "linear"
     
@@ -32,11 +32,15 @@ for input = 2
     edge_density =  zeros(length(c3_inp_array),length(gamma_input));
     for ii = 1:length(c3_inp_array)
         c3_inp = c3_inp_array(ii);
+        disp('************************')
+        disp(['c3_inp = ', num2str(c3_inp)])
+
         for kk = 1:length(gamma_input)
                 gamma = gamma_input(kk);
                 
                 %repeated trials
                 for iterator = 1:ntrial
+                disp(['Trial ', num2str(iterator)])
 
                 % generate inputs
                 [x, W2, W3, T3, data_type] = GenerateHygraph(n, K, gamma, c2, c3_inp, input_shape, input);
@@ -50,6 +54,7 @@ for input = 2
                 [x, W2, W3, T3] = MaxConnectedSubgraph(x, c2, c3_inp, W2, W3, T3);    
                 n_nodes = size(W2,2);
                 
+                %{
                 %plot the adjacency matrix
                 imagesc(W2,[0,1]); %plot color map of original matrix
                 colormap(flipud(gray(2)));
@@ -65,6 +70,7 @@ for input = 2
                 ax = gca;% Requires R2020a or later
                 exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_gamma=', num2str(gamma),'_input_W3_c3_',num2str(c3_inp),'.eps'),'Resolution',300) 
 
+                %}
 
                 %shuffle input adjacency matrix
                 %idx_rand = randperm(size(W2,1));% shuffle the nodes
@@ -74,9 +80,10 @@ for input = 2
 
             for jj = 1:length(c3_inv_array)
                 c3_inv = c3_inv_array(jj);
+                disp(['c3_inv = ', num2str(c3_inv)])
 
                 %estimate embedding using linear spectral clustering
-                x_est_linear = LinearHypergraphEmbedding(W2, W3, c2, c3_inv, "false");
+                x_est_linear = LinearHypergraphEmbedding(W2, W3, c2, c3_inv, "false", 1);
                 x_est_periodic = PeriodicHypergraphEmbedding(W2, W3, c2, c3_inv, "false");
                 
                 %normalize the estimated embedding to the same range
@@ -84,7 +91,7 @@ for input = 2
                 
                 %calculate eta
                 [~, eta_linear_est] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3_inv, 2, "linear");
-                [~, eta_linear_true] = CalculateModelLikelihood(x, W2, T3, c2, c3_inv, 2, "linear");
+                [~, eta_linear_true] = CalculateModelLikelihood(x', W2, T3, c2, c3_inv, 2, "linear");
 
                 %scale estimation
                 x_est_linear = x_est_linear*sqrt(eta_linear_true/eta_linear_est);  
@@ -138,9 +145,11 @@ for input = 2
 
 
 %%%%%%%%%%%%%%%% SAVE DATA %%%%%%%%%%%%%%%%%%%%%%%%
-save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_periodic',  'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density');
-%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%
+save(strcat(input_shape,'_',data_type, '_gamma=', num2str(gamma_input,2),'.mat'), 'rand_linear', 'rand_periodic',  'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density', 'correlation_lin', 'correlation_per');
+%load(strcat(input_shape,'_',data_type, '_gamma=', num2str(gamma_input,2),'.mat'), 'rand_linear', 'rand_periodic',  'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density', 'correlation_lin', 'correlation_per');
 
+%%%%%%%%%%%%%%%% PLOTS %%%%%%%%%%%%%%%%%
+%{
     for select_gamma_in = 1:length(gamma_input)
         gamma_plot = gamma_input(select_gamma_in);
 
@@ -149,7 +158,7 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
         figure 
         h = heatmap(round(rand_linear(:,:,select_gamma_in), 2));
         %caxis([0, 1]);
-        h.Title = strcat('Linear Rand, \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Linear Rand, \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -160,7 +169,7 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
         % plot heatmap of periodic rand
         h = heatmap(round(rand_periodic(:,:,select_gamma_in), 2));
         %caxis([0, 1]);
-        h.Title = strcat('Periodic Rand, \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Periodic Rand, \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -171,7 +180,7 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
         % plot heatmap of linear - periodic rand
         h = heatmap(round(rand_linear(:,:,select_gamma_in)-rand_periodic(:,:,select_gamma_in), 2));
         %caxis([-0.5, 0.5]);
-        h.Title = strcat('Linear Rand - Periodic Rand, \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Linear Rand - Periodic Rand, \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -183,8 +192,8 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
 
         % plot heatmap of linear max log-likelihood
         h = heatmap(round(max_lnP_linear(:,:,select_gamma_in), 2),'Colormap',parula);
-        h.CellLabelFormat = '%.2f';
-        h.Title = strcat('Max LnP Linear, \gamma_{in}=', num2str(gamma_plot) );
+        h.CellLabelFormat = '%.1e';
+        %h.Title = strcat('Max LnP Linear, \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -194,7 +203,8 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
         
         % plot heatmap of periodic max log-likelihood
         h = heatmap(round(max_lnP_periodic(:,:,select_gamma_in), 2),'Colormap',parula);
-        h.Title = strcat('Max LnP Periodic, \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Max LnP Periodic, \gamma_{in}=', num2str(gamma_plot) );
+        h.CellLabelFormat = '%.1e';
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -204,7 +214,7 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
         
         % plot heatmap of linear - periodic log-likelihood
         h = heatmap(round(max_lnP_linear(:,:,select_gamma_in)-max_lnP_periodic(:,:,select_gamma_in), 2),'Colormap',parula);
-        h.Title = strcat('Max LnP Linear-Periodic, \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Max LnP Linear-Periodic, \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -214,7 +224,7 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
       
         % plot heatmap of linear correlation
         h = heatmap(round(correlation_lin(:,:,select_gamma_in), 2),'Colormap',parula);
-        h.Title = strcat('Correlation betweeen estimation and truth (linear) \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Correlation betweeen estimation and truth (linear) \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -224,7 +234,7 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
         
         % plot heatmap of periodic correlation
         h = heatmap(round(correlation_per(:,:,select_gamma_in), 2),'Colormap',parula);
-        h.Title = strcat('Correlation betweeen estimation and truth (periodic) \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Correlation betweeen estimation and truth (periodic) \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -234,7 +244,7 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
      
         % plot heatmap of linear - periodic correlation
         h = heatmap(round(correlation_lin(:,:,select_gamma_in)-correlation_per(:,:,select_gamma_in), 2),'Colormap',parula);
-        h.Title = strcat('Difference between correlations \gamma_{in}=', num2str(gamma_plot) );
+        %h.Title = strcat('Difference between correlations \gamma_{in}=', num2str(gamma_plot) );
         h.XLabel = 'c3_{inv}';
         h.YLabel = 'c3_{inp}';
         h.XData = round(c3_inv_array,2);
@@ -255,15 +265,17 @@ save(strcat('mat/',input_shape,'_',data_type, '.mat'), 'rand_linear', 'rand_peri
         ax = gca;
         exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_gamma=', num2str(gamma_plot),'_density.eps'),'Resolution',300) 
         hold off;
+
         
     end
-
+%}
 end
 
 
 end
 
 toc
-beep on
-%load handel
-%sound(y,Fs)
+%beep on
+%beep
+load handel
+sound(y,Fs)
