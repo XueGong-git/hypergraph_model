@@ -61,11 +61,17 @@ for i = 1:n-1
     for j = i+1:n
         lnP0 = lnP0 + c2*gamma*I(i,j) - log(1+exp(c2*gamma*I(i,j)));
         P_edge(i,j) = 1/(1+exp(c2*gamma*I(i,j)));
+        if c2*gamma*I(i,j)>700
+            lnP_edge = - c2*gamma*I(i,j); 
+        else
+            lnP_edge = - log(1+exp(c2*gamma*I(i,j)));
+        end
+        
         if W2(i,j) == 1
-            lnP = lnP - log(1+exp(c2*gamma*I(i,j))); 
+            lnP = lnP + lnP_edge;
             eta = eta + c2*I(i,j);
         else
-            lnP = lnP + c2*gamma*I(i,j) - log(1+exp(c2*gamma*I(i,j)));
+            lnP = lnP + c2*gamma*I(i,j) + lnP_edge;
         end
     end
 end
@@ -83,6 +89,13 @@ for i = 1:n-2 % smallest node index
 
             %calculate incoherene of nodes
             I_R = I(i,j)+ I(i,k) + I(j,k);
+            
+            if c3*gamma*I_R>700
+                lnP_triangle = - c3*gamma*I_R; % to avoid overflow
+            else
+                lnP_triangle = - log(1+exp(c3*gamma*I_R));
+            end
+            
             I3(i,j,k) = I_R;
             I3(i,k,j) = I_R;
             I3(j,i,k) = I_R;
@@ -99,10 +112,10 @@ for i = 1:n-2 % smallest node index
             P_triangles(k,j,i) = P_triangle; %tensor
             lnP0 = lnP0 + c3*gamma*I_R - log(1+exp(c3*gamma*I_R)); % log-likelihood of null graph
             if T3(i,j,k) == 1
-                lnP = lnP - log(1+exp(c3*gamma*I_R));
+                lnP = lnP + lnP_triangle;
                 eta = eta + c3*I_R;
             else
-                lnP = lnP + c3*gamma*I_R - log(1+exp(c3*gamma*I_R));
+                lnP = lnP + c3*gamma*I_R + lnP_triangle;
 
             end
         end

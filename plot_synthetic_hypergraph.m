@@ -1,7 +1,7 @@
 clear
 
+%input_shape = "linear";
 input_shape = "periodic";
-%input_shape = "periodic";
 data_type = "cluster";
 c3 = 1/3;
 gamma_array = 0:1:10; % gamma for likelihood plot
@@ -69,6 +69,7 @@ gamma_max_linear_scaled = gamma_array(max_linear_scaled_idx);
 gamma_max_periodic = gamma_array(max_periodic_idx); 
 
 %%%%%% likelihood diff %%%%%%
+%{
 % plot difference of log-likelihood
 plt = plot(gamma_input, mean(max_lnP_linear,1)-mean(max_lnP_periodic, 1), '-*b', 'LineWidth',1.5);
 yline(0);
@@ -80,6 +81,8 @@ ax = gca;
 exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_maxlnPDiff.eps'),'Resolution',300) 
 hold off;
 
+%}
+
 %%%%%  RAND plot %%%%%%
 % edge and triangle density
 edge_density =  mean(2*n_edge./(n_nodes.*(n_nodes-1)),1);
@@ -87,45 +90,54 @@ triangle_density = mean(6*n_triangle./(n_nodes.*(n_nodes-1).*(n_nodes-2)),1);
 
 
 if data_type == "cluster"
+    % Rand Index
     cla(gca,'reset')
     yyaxis left
+    % Linear ARI
     plt = plot(gamma_input, mean(rand_linear,1), '-*k', 'LineWidth',1.5);
     hold on
     rand_linear_s = sort(rand_linear);
+    %CI
     xconf = [gamma_input gamma_input(end:-1:1)] ;         
     yconf = [rand_linear_s(5,:) rand_linear_s(size(rand_linear_s,1)-4, end:-1:1)];
     fill(xconf,yconf,'black','FaceAlpha', 0.3, 'EdgeColor', 'none');
     
+    % Periodic ARI
     left_color = [0 0 0];
     right_color = [0 0 0];
     set(plt,'defaultAxesColorOrder',[left_color; right_color]);
     hold on;
-    plot(gamma_input, mean(rand_periodic,1), '-*r', 'LineWidth',1.5);
+    plot(gamma_input, mean(rand_periodic,1), '-or', 'LineWidth',1.5);
     rand_periodic_s = sort(rand_periodic);
+    % CI
     xconf = [gamma_input gamma_input(end:-1:1)] ;         
     yconf = [rand_periodic_s(5,:) rand_periodic_s(size(rand_periodic_s,1)-4, end:-1:1)];
     fill(xconf,yconf,'red','FaceAlpha', 0.3, 'EdgeColor', 'none');
     
+    % Edge density
     plot(gamma_input, edge_density, '--*k', 'LineWidth',1.5, 'Color', [0 0.4470 0.7410]);
     yyaxis right
-    plot(gamma_input, triangle_density, '--*k', 'LineWidth',1.5, 'Color', [0.8500 0.3250 0.0980]);
+    % Triangle density
+    plot(gamma_input, triangle_density, '--ok', 'LineWidth',1.5, 'Color', [0.8500 0.3250 0.0980]);
     legend({'Linear','80% CI', 'Periodic','80% CI', 'Edge Density', 'Triangle Density'},'FontSize', 20,'Location','east');
     xlabel('\gamma','FontSize', 13);
     yyaxis left
-    ylabel('Rand Index','FontSize', 13);
+    ylabel('ARI','FontSize', 13);
     yyaxis right
     ylabel('Triangle Density')
     set(gca,'fontsize',30);
     %set(gca,'YLim',[0 1.1])
     set(gca,'XLim',[0 max(gamma_input)])
     plt.LineWidth = 2;
+    pos = get(gca, 'OuterPosition');
+    %set(gca,'OuterPosition',[pos(1) pos(2)+0.01 pos(3) pos(4)-0.02]);
     ax = gca;
     exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_rand.eps'),'Resolution',300) 
     hold off;
 end
 cla(gca,'reset')
-%%%%%% heatmap of likelihood over c3 %%%%%%%%
 
+%%% maximum likelihood
 %%% plot confidence bounds
 x = gamma_input;
 y_array = max_lnP_linear;
@@ -137,7 +149,7 @@ xconf = [x x(end:-1:1)] ;
 yconf = [ys(5,:) ys(size(y_array,1)-4, end:-1:1)];
 
 figure
-plot(x,y,'ko','LineWidth',1.5, 'Color', [0 0 0])
+plot(x,y,'-*k','LineWidth',0.8, 'Color', [0 0 0])
 hold on
 
 p = fill(xconf,yconf,'black');
@@ -154,18 +166,20 @@ y = mean(y_array,1);
 xconf = [x x(end:-1:1)] ;         
 yconf = [ys(5,:) ys(size(rand_linear,1)-4, end:-1:1)];
 
-plot(x,y,'ro','LineWidth',1.5, 'Color', [1 0 0])
+plot(x,y,'--or','LineWidth',0.8, 'Color', [1 0 0])
 
 p = fill(xconf,yconf,'red');
 p.FaceColor = [1 0.8 0.8];      
 p.EdgeColor = 'none';
-p.FaceAlpha = 0.3;
+p.FaceAlpha = 0.8;
 
 xlabel('\gamma','FontSize', 13);
 ylabel('Maximum LnP','FontSize', 13);
 legend({'Linear','80% CI','Periodic','80% CI'},'FontSize', 20,'Location','best');
-ax = gca;
 set(gca,'fontsize',30);
+pos = get(gca, 'OuterPosition');
+set(gca,'OuterPosition',[pos(1) pos(2)+0.05 pos(3) pos(4)-0.05]);
+ax = gca;
 exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_lnP.eps'),'Resolution',300) 
 
 

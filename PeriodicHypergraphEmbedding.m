@@ -15,7 +15,7 @@
 %c2 = 1/2;
 %c3 = 1/3;
 
-function [x_est, V, lambda] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, norm, n_vec)
+function [x_est, V, lambda] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, norm)
 
 
 

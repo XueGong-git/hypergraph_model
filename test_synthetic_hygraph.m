@@ -5,7 +5,7 @@ addpath ('functions')
 
 m = 50; %number of nodes per cluster
 K = 5; % number of clusters 
-n = l*K; % number of nodes
+n = m*K; % number of nodes
 c2 = 1; % weight of simple edge
 c3 = 1/3; % weight of triangles
 gamma_array = 0:1:10; % gamma for likelihood plot
@@ -15,7 +15,7 @@ ntrial = 40;
 
 for input_shape = "periodic" % "periodic" or "linear"
     
-for input = 2
+for data_type = "cluster"
     rand_linear = [];
     rand_periodic = [];
     triangle_density = [];
@@ -32,47 +32,10 @@ for input = 2
 
         %%%% run multiple iterations
         for trial_id = 1:ntrial
-        disp(['Trial ', num2str(trial_id)])
-      
-            % generate synthetic hypergraphs
-            if input_shape == "linear" 
-                a = 0.05;
-
-                switch input
-
-                case 1 
-                    x = linspace(0,2,n);%uniform from 0 to 2pi
-                    data_type = "uniform";
-                case 2 
-                    x = sort(repmat(linspace(0,2, K),1,m)+(2*a*rand(1,n)-a));
-                    %x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n)-a)); % angles from -pi to pi
-                    data_type = "cluster";
-                case 3
-                    x = linspace(0,0,n); %overlapping x
-                    data_type = "overlap";
-                end
-                [E2, W2, W3, T3] = GenerateLinearHypergraph(x, gamma, c2, c3);
-            elseif input_shape == "periodic" 
-                a = 0.05*pi; % noise;
-
-                switch input
-
-                case 1 
-                    x = linspace(0,2*pi,n);%uniform from 0 to 2pi
-                    data_type = "uniform";
-                case 2 
-                    x = sort(repmat(linspace(-pi,pi,K),1,m)+(2*a*rand(1,n)-a)); % angles from -pi to pi
-                    data_type = "cluster";
-                case 3
-                    x = linspace(0,0,n); %overlapping x
-                    data_type = "overlap";
-                end
-                [W2, W3, T3] = GeneratePeriodicHypergraph(x, gamma, c2, c3);
-
-            end
-
-
-
+            disp(['Trial ', num2str(trial_id)])
+     
+            % generate inputs
+            [x, W2, W3, T3, data_type, cluster_input] = GenerateHygraph(n, K, gamma, c2, c3, input_shape);
 
             %calculate edge density
             n_nodes(trial_id, gg) = size(W2,2);
@@ -162,11 +125,6 @@ for input = 2
 
     %}
 
-            %shuffle input adjacency matrix
-            idx_rand = randperm(size(W2,1));% shuffle the nodes
-            [~, idx_reverse] = sort(idx_rand);
-            W2 = W2(idx_rand,idx_rand);
-            W3 = W3(idx_rand,idx_rand);
 
             %estimate embedding using linear spectral clustering
             [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false", 1);
@@ -174,18 +132,6 @@ for input = 2
 
             %normalize the estimated embedding to the same range
             x_est_linear = x_est_linear*norm(x,2)/norm(x_est_linear,2);        
-
-            %reverse to the input order
-            x_est_linear = x_est_linear(idx_reverse);
-            x_est_periodic = x_est_periodic(idx_reverse);
-            W2 = W2(idx_reverse, idx_reverse);
-            W3 = W3(idx_reverse, idx_reverse);
-
-
-            %reorder nodes according to the embedding
-            [~,idx_linear] = sort(x_est_linear);
-            W2_reorder_linear = W2(idx_linear,idx_linear);
-            W3_reorder_linear = W3(idx_linear,idx_linear);
 
             %reorder nodes according to the embedding
             [~,idx_periodic] = sort(x_est_periodic);
@@ -280,8 +226,6 @@ for input = 2
 
 
             if data_type == "cluster"
-
-                cluster_input = kmeans(transpose(x), K);
                 cluster_est_linear = kmeans(x_est_linear, K);
                 cluster_est_periodic = kmeans(x_est_periodic, K);
                 rand_linear(trial_id, gg) = CalculateRandIndex(cluster_input, cluster_est_linear, 'adjusted');

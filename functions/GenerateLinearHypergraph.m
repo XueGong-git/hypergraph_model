@@ -21,7 +21,7 @@ n = length(x);
 
 size_lcc = 0;
 
-while size_lcc < n
+while size_lcc < n % check the hypergraph is connected
     
 
     I = zeros(n);
