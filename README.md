@@ -1,1 +1,2 @@
-# hypergraph_model
+Code to produce results and figures for our paper:
+Gong, Xue, Desmond J. Higham, and Konstantinos Zygalakis. "Generative Hypergraph Models and Spectral Embedding." arXiv preprint arXiv:2207.13895 (2022).
