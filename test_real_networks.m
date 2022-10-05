@@ -4,7 +4,7 @@ close all
 
 % folder that contains algorithm scripts
 addpath 'functions';
-set(groot,'defaultFigureVisible','off') % 'on' to turn figures back on.  
+set(groot,'defaultFigureVisible','on') % 'on' to turn figures back on.  
 tic
 
 
@@ -206,6 +206,10 @@ hold off;
 plt = plot(c3_array, max_lnP_linear, '-*b', 'LineWidth',1.5);
 hold on;
 plot(c3_array, max_lnP_periodic, '--or', 'LineWidth',1.5);
+[global_max_lnP_lin, max_lin_idx] = max(max_lnP_linear);
+[global_max_lnP_per, max_per_idx] = max(max_lnP_periodic);
+plot(c3_array(max_lin_idx), global_max_lnP_lin, 'pr', 'MarkerSize',15, 'MarkerFaceColor','red');
+plot(c3_array(max_per_idx), global_max_lnP_per, 'pr', 'MarkerSize',15, 'MarkerFaceColor','red');
 legend({'Linear','Periodic'},'FontSize', 20,'Location','southeast');
 xlabel('c_3*','FontSize', 13);
 ylabel('Maximum LnP','FontSize', 13);
@@ -235,7 +239,7 @@ h.YData = round(c3_array,2);
 ax = gca;% Requires R2020a or later
 caxis([-2000000, 0]);
 exportgraphics(ax,strcat('plots/lnP_periodic_', data_type,'_c2_',num2str(round(c2,2)),'.eps'),'Resolution',300) 
-
+ 
 
 
 %save(strcat(data_type,'_trim_clustering.mat'), 'rand_linear', ...

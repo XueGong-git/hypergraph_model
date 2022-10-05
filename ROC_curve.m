@@ -16,8 +16,9 @@ c3_inp = 1/3;
 c2 = 1; % weight of diadic edge
 c3_array = 0.5; % weight of triadic edge
 gamma_array = 1; % gamma for likelihood plot
-data_name = "synthetic_lin";
-train_ratio = 0.2;
+%data_name = "synthetic_lin";
+data_name = "contact-high-school";
+train_ratio = 0.8;
 train_file = strcat('processed_data/', data_name,'_train_', num2str(train_ratio),'.mat');
 test_file = strcat('processed_data/', data_name,'_test_',num2str(1-train_ratio),'.mat');
 m = 60; % number of nodes per cluster
@@ -119,7 +120,7 @@ for ii = 1:length(c3_array)
     
     %estimate embedding using linear spectral clustering 
     [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", 3); % don't normalize
-    [x_est_periodic] = PeriodicHypergraphEmbedding(W2_in, W3_in, c2, c3, "false",3);
+    [x_est_periodic] = PeriodicHypergraphEmbedding(W2_in, W3_in, c2, c3, "false");
     
     %calculate eta
     [~, eta_linear_est, ~] = CalculateModelLikelihood(x_est_linear, W2_in, T3_in, c2, c3, 2, "linear");

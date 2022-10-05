@@ -1,18 +1,17 @@
+%%%%%% Plot Figure 1(c)-(d) and 2(c)-(d) in the paper
+
 clear
 
-%input_shape = "linear";
-input_shape = "periodic";
+c3 = 1/3; % weight of triangles
+input_shape = "linear"; % Plot Figure 1(c)-(d)
+%input_shape = "periodic"; % Plot Figure 2(c)-(d)
 data_type = "cluster";
-c3 = 1/3;
-gamma_array = 0:1:10; % gamma for likelihood plot
-gamma_input = 0:1:10; % gamma for generating graph
 
 %load data
-
 load(strcat(input_shape,'_',data_type, '_c3=', num2str(c3,2) ,'.mat'), ...
-    'rand_linear', 'rand_periodic',  'max_lnP_linear', 'max_linear_idx', ...
+    'c2','c3','rand_linear', 'rand_periodic',  'max_lnP_linear', 'max_linear_idx', ...
 'max_lnP_linear_scaled', 'max_linear_scaled_idx', 'max_lnP_periodic', 'max_periodic_idx', ...
-'n_edge', 'n_nodes', 'n_triangle');
+'n_edge', 'n_nodes', 'n_triangle', 'gamma_array', 'gamma_input');
 
 
 disp('************************')
@@ -42,46 +41,11 @@ disp(['coefficient of variation = ', num2str(100*std(rand_periodic)./mean(rand_p
 
 
 %%%%%%%%%%% plots %%%%%%%
-
-%{
-%%%%%% input adjacency Dyadic matrix w2 %%%%%%
-cla(gca,'reset')
-imagesc(W2,[0,1]); %plot color map of original matrix
-colormap(flipud(gray(2)));
-set(gca,'FontSize',30) ;
-ax = gca;% Requires R2020a or later
-exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_W2_inp.eps'),'Resolution',300) 
-
-%%%%%% input adjacency Dyadic matrix w3 %%%%%%
-cla(gca,'reset')
-imagesc(W3); %plot color map of original matrix
-colormap(flipud(gray(256)));
-colorbar
-set(gca,'FontSize',30) ;
-ax = gca;% Requires R2020a or later
-exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_W3_inp.eps'),'Resolution',300) 
-
-%}
 %%%%%% likelihood plot %%%%%%
 
 gamma_max_linear = gamma_array(max_linear_idx); 
 gamma_max_linear_scaled = gamma_array(max_linear_scaled_idx); 
 gamma_max_periodic = gamma_array(max_periodic_idx); 
-
-%%%%%% likelihood diff %%%%%%
-%{
-% plot difference of log-likelihood
-plt = plot(gamma_input, mean(max_lnP_linear,1)-mean(max_lnP_periodic, 1), '-*b', 'LineWidth',1.5);
-yline(0);
-xlabel('\gamma','FontSize', 13);
-ylabel('log(max\{P_{lin}\}/max\{P_{per}\})','FontSize', 13);
-set(gca,'fontsize',30);
-plt.LineWidth = 2;
-ax = gca;
-exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_maxlnPDiff.eps'),'Resolution',300) 
-hold off;
-
-%}
 
 %%%%%  RAND plot %%%%%%
 % edge and triangle density
@@ -120,7 +84,7 @@ if data_type == "cluster"
     % Triangle density
     plot(gamma_input, triangle_density, '--ok', 'LineWidth',1.5, 'Color', [0.8500 0.3250 0.0980]);
     legend({'Linear','80% CI', 'Periodic','80% CI', 'Edge Density', 'Triangle Density'},'FontSize', 20,'Location','east');
-    xlabel('\gamma','FontSize', 13);
+    xlabel('\gamma_0','FontSize', 13);
     yyaxis left
     ylabel('ARI','FontSize', 13);
     yyaxis right
@@ -130,7 +94,7 @@ if data_type == "cluster"
     set(gca,'XLim',[0 max(gamma_input)])
     plt.LineWidth = 2;
     pos = get(gca, 'OuterPosition');
-    %set(gca,'OuterPosition',[pos(1) pos(2)+0.01 pos(3) pos(4)-0.02]);
+    set(gca,'OuterPosition',[pos(1) pos(2) pos(3) pos(4)]);
     ax = gca;
     exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_rand.eps'),'Resolution',300) 
     hold off;
@@ -173,12 +137,13 @@ p.FaceColor = [1 0.8 0.8];
 p.EdgeColor = 'none';
 p.FaceAlpha = 0.8;
 
-xlabel('\gamma','FontSize', 13);
+xlabel('\gamma_0','FontSize', 13);
 ylabel('Maximum LnP','FontSize', 13);
 legend({'Linear','80% CI','Periodic','80% CI'},'FontSize', 20,'Location','best');
 set(gca,'fontsize',30);
 pos = get(gca, 'OuterPosition');
-set(gca,'OuterPosition',[pos(1) pos(2)+0.05 pos(3) pos(4)-0.05]);
+set(gca,'OuterPosition',[pos(1) pos(2) pos(3) pos(4)]);
+%set(gca,'OuterPosition',[pos(1) pos(2)+0.05 pos(3) pos(4)-0.05]);
 ax = gca;
 exportgraphics(ax,strcat('plots/',input_shape,'_',data_type,'_lnP.eps'),'Resolution',300) 
 
