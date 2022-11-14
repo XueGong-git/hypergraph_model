@@ -32,7 +32,7 @@ if isfile(filename)
 
 else
     if data_type == "highschool"
-        [W2, W3, T3, E2, E3] = LoadHighSchool();
+        [W2, W3, T3, E2, E3] = LoadContactData('raw_data/highschool.txt');
         label = readtable('raw_data/highschool_label', 'ReadVariableNames', false);
         save('highschool','W2', 'W3', 'T3', 'E2', 'E3','label');
     elseif data_type == "senate_bill"

@@ -1,4 +1,4 @@
-function [W2, W3, T3, E2, E3] = LoadHighSchool()
+function [W2, W3, T3, E2, E3] = LoadContactData(filename)
 
 
 n = 327;
