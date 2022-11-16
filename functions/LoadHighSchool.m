@@ -1,5 +1,4 @@
-function [W2, W3, T3, E2, E3] = LoadContactData(filename)
-
+function [W2, W3, T3, E2, E3] = LoadHighSchool()
 
 n = 327;
 E2 = []; % edge list
@@ -9,9 +8,7 @@ E3 = []; % edge list
 W3 = zeros(n); % 2nd order adjacency matrix  
 T3 = zeros(n,n,n);
 
-
-%read hyper edges in a cell array
-
+%read hyperedges in a cell array
 fid = fopen('raw_data/highschool.txt');
 line1 = fgetl(fid);
 res=line1;
@@ -54,6 +51,5 @@ end
 
 %symmetryze matrix
 W2 = W2 + W2'; W3 = W3 + W3'; 
-
 
 end

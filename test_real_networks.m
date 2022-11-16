@@ -4,15 +4,15 @@ close all
 
 % folder that contains algorithm scripts
 addpath 'functions';
-set(groot,'defaultFigureVisible','on') % 'on' to turn figures back on.  
+set(groot,'defaultFigureVisible','off') % 'on' to turn figures back on.  
 tic
 
 
 c2 = 1; % weight of simple edge
 c3_array = 0:0.1:2;
-gamma_array = 0:10:200; % gamma for likelihood plot
-data_type = "highschool";
-K = 9;
+gamma_array = 0:2.5:50; % gamma for likelihood plot
+%data_type = "highschool";
+data_type = "primaryschool";
 rand_linear = [];
 rand_periodic = [];
 max_lnP_linear = [];
@@ -23,20 +23,28 @@ lnP_periodic = zeros(length(c3_array),length(gamma_array));
 
 filename = strcat(data_type,'.mat');
 
-if isfile(filename)
-    if data_type == "highschool"
+if data_type == "highschool"
+    K = 9;
+    if isfile(filename)
         load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
-    elseif data_type == "senate_bill"
-        load(filename,'W2', 'W3', 'T3', 'E2', 'E3')
-    end
-
-else
-    if data_type == "highschool"
-        [W2, W3, T3, E2, E3] = LoadContactData('raw_data/highschool.txt');
+    else
+        [W2, W3, T3, E2, E3] = LoadHighSchool();
         label = readtable('raw_data/highschool_label', 'ReadVariableNames', false);
         save('highschool','W2', 'W3', 'T3', 'E2', 'E3','label');
-    elseif data_type == "senate_bill"
-        [W2, W3, T3, E2, E3] = LoadSenateBill();
+    end
+elseif data_type == "primaryschool"
+    K = 11;
+    if isfile(filename)
+        load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
+    else
+        [W2, W3, T3, E2, E3] = LoadPrimarySchool();
+        label = readtable('raw_data/primaryschool_label', 'ReadVariableNames', false);
+        save('primaryschool','W2', 'W3', 'T3', 'E2', 'E3','label');
+    end
+elseif data_type == "senate_bill"
+    if isfile(filename)
+        load(filename,'W2', 'W3', 'T3', 'E2', 'E3')
+    else [W2, W3, T3, E2, E3] = LoadSenateBill();
         save('senate_bill','W2', 'W3', 'T3', 'E2', 'E3');
     end
 end
