@@ -1,7 +1,6 @@
-function [W2, W3, T3, E2, E3] = LoadSenateBill()
+function [W2, W3, T3, E2, E3] = LoadPrimarySchool()
 
-
-n = 294;
+n = 242;
 E2 = []; % edge list
 W2 = zeros(n); % 2nd order adjacency matrix  
 
@@ -9,12 +8,11 @@ E3 = []; % edge list
 W3 = zeros(n); % 2nd order adjacency matrix  
 T3 = zeros(n,n,n);
 
-
-%read hyper edges in a cell array
-
-fid = fopen('raw_data/senate-bills/hyperedges-senate-bills.txt');
+%read hyperedges in a cell array
+fid = fopen('raw_data/primaryschool.txt');
 line1 = fgetl(fid);
 res=line1;
+
 while ischar(line1)
     line1 = fgetl(fid);
     res = char(res,line1);
@@ -30,7 +28,6 @@ for k=1:size(res,1)
       E2(end+1,:) = [E{k}(2),E{k}(1)];
       W2(E{k}(1),E{k}(2))=1; % only fill uppder triangle
   elseif length(E{k}) == 3
-      E3(end+1,:) = E{k};
       E3(end+1,:) = [E{k}(1),E{k}(2),E{k}(3)];
       E3(end+1,:) = [E{k}(1),E{k}(3),E{k}(2)];
       E3(end+1,:) = [E{k}(2),E{k}(1),E{k}(3)];
@@ -46,7 +43,6 @@ for k=1:size(res,1)
       T3(E{k}(3),E{k}(2),E{k}(1)) = 1; %tensor
       
       
-      W2(E{k}(1),E{k}(2))=1; %only fill uppder triangle
       W3(E{k}(1),E{k}(2))= W3(E{k}(2),E{k}(2))+1;
       W3(E{k}(1),E{k}(3))= W3(E{k}(1),E{k}(3))+1;
       W3(E{k}(2),E{k}(3))= W3(E{k}(2),E{k}(3))+1;
@@ -55,4 +51,5 @@ end
 
 %symmetryze matrix
 W2 = W2 + W2'; W3 = W3 + W3'; 
+
 end

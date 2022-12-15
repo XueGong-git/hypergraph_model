@@ -12,13 +12,12 @@ K = 4; %number of clusters
 gamma_inp = 18; % decay parameter for synthetic networks
 c2_inp = 1;
 c3_inp = 1/3;
-
 c2 = 1; % weight of diadic edge
-c3_array = 0.5; % weight of triadic edge
+c3_array = 1.1; % weight of triadic edge
 gamma_array = 1; % gamma for likelihood plot
-%data_name = "synthetic_lin";
-data_name = "contact-high-school";
-train_ratio = 0.8;
+%data_name = "contact-high-school";
+data_name = "contact-primary-school";
+train_ratio = 0.2;
 train_file = strcat('processed_data/', data_name,'_train_', num2str(train_ratio),'.mat');
 test_file = strcat('processed_data/', data_name,'_test_',num2str(1-train_ratio),'.mat');
 m = 60; % number of nodes per cluster
@@ -39,12 +38,12 @@ lnP_linear = zeros(length(c3_array),length(gamma_array)); % likelihood
 lnP_periodic = zeros(length(c3_array),length(gamma_array));
 
 % load data
-if ismember (data_name, ["contact-high-school", "contact-primary-school", "coauth-DBLP", "email-Eu", "email-Enron" ] )
+if ismember (data_name, ["contact-high-school", "contact-primary-school", "email-Eu", "email-Enron" ] )
     if  ~isfile(train_file) || ~isfile(test_file)
         [train_list, test_list, n_nodes] = SplitData(data_name,train_ratio); %split data into train and test by time
-        [W2, W3, T3, ~] = LoadSimplex(train_list, n_nodes); %save list of simplices into matrix
+        [W2, W3, T3, E2, E3] = LoadSimplex(train_list, n_nodes); %save list of simplices into matrix
         save(train_file,'W2', 'W3', 'T3', 'E2', 'E3');
-        [W2, W3, T3, ~] = LoadSimplex(test_list, n_nodes);
+        [W2, W3, T3, E2, E3] = LoadSimplex(test_list, n_nodes);
         save(test_file,'W2', 'W3', 'T3', 'E2', 'E3');
     end
     train = load(train_file,'W2', 'W3', 'T3', 'E2', 'E3');
@@ -66,7 +65,7 @@ elseif data_name == "synthetic_lin"
         [train_list, test_list, n_nodes] = SplitData(data_name,train_ratio); %split data into train and test by time
         [W2, W3, T3, ~] = LoadSimplex(train_list, n_nodes); %save list of simplices into matrix
         save(train_file,'W2', 'W3', 'T3', 'E2');
-        [W2, W3, T3, ~] = LoadSimplex(test_list, n_nodes);
+        [W2, W3, T3, ~] = LoadSimplex(test_list, n_nodes); 
         save(test_file,'W2', 'W3', 'T3', 'E2');
     %end
 elseif data_name == "synthetic_per"
@@ -80,7 +79,7 @@ elseif data_name == "synthetic_per"
 end
 
 %extract largest connected component
-%[x, W2, W3, T3] = MaxConnectedSubgraph(x, c2, c3, W2, W3, T3);    
+[idx, W2, W3, T3] = MaxConnectedSubgraph(1, 1, train.W2, train.W3, train.T3);    
 
 train = load(train_file,'W2', 'W3', 'T3', 'E2');
 test  = load(test_file,'W2', 'W3', 'T3', 'E2');
@@ -119,7 +118,7 @@ for ii = 1:length(c3_array)
     norm_eta = c2*n_edge + c3*n_triangle;
     
     %estimate embedding using linear spectral clustering 
-    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", 3); % don't normalize
+    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", 3); %  3 eigenvectors
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2_in, W3_in, c2, c3, "false");
     
     %calculate eta
@@ -351,9 +350,6 @@ exportgraphics(ax,strcat('plots/ROC_comparison_', data_name,'_train_',num2str(ro
 hold off
 
 %load handel
-%sound(y,Fs)
-
-%}
-
+save(strcat("AUC_",data_name, "_train=", num2str(train_ratio), '.mat'),'AUC_triangle_arith', 'AUC_triangle_arith_shuffle', 'AUC_triangle_geo', 'AUC_triangle_geo_shuffle', 'AUC_triangle_harm','AUC_triangle_harm_shuffle',"AUC_triangle_lin", "AUC_triangle_per", "AUC_triangle_rand");
 
 toc

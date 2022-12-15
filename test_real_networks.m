@@ -9,8 +9,9 @@ tic
 
 
 c2 = 1; % weight of simple edge
-c3_array = 0:0.1:2;
-gamma_array = 0:2.5:50; % gamma for likelihood plot
+c3_array = 0:0.5:10;
+gamma_array = 0:2:50; % gamma for likelihood plot
+%data_type = "senate-committees";
 %data_type = "highschool";
 data_type = "primaryschool";
 rand_linear = [];
@@ -25,6 +26,7 @@ filename = strcat(data_type,'.mat');
 
 if data_type == "highschool"
     K = 9;
+    n_eig = 1;
     if isfile(filename)
         load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
     else
@@ -34,6 +36,7 @@ if data_type == "highschool"
     end
 elseif data_type == "primaryschool"
     K = 11;
+    n_eig = 1;
     if isfile(filename)
         load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
     else
@@ -42,10 +45,22 @@ elseif data_type == "primaryschool"
         save('primaryschool','W2', 'W3', 'T3', 'E2', 'E3','label');
     end
 elseif data_type == "senate_bill"
+    K = 2;
+    n_eig = 1;
     if isfile(filename)
         load(filename,'W2', 'W3', 'T3', 'E2', 'E3')
     else [W2, W3, T3, E2, E3] = LoadSenateBill();
-        save('senate_bill','W2', 'W3', 'T3', 'E2', 'E3');
+        label = readtable('raw_data/senate-bills/node-labels-senate-bills.txt', 'ReadVariableNames', false);
+        save('senate_bill','W2', 'W3', 'T3', 'E2', 'E3','label');
+    end
+elseif data_type == "senate-committees"
+    K = 2;
+    n_eig = 1;
+    if isfile(filename)
+        load(filename,'W2', 'W3', 'T3', 'E2', 'E3')
+    else [W2, W3, T3, E2, E3] = LoadSenateCommittees();
+        label = readtable('raw_data/senate-committees/node-labels-senate-committees.txt', 'ReadVariableNames', false);
+        save('house_bill','W2', 'W3', 'T3', 'E2', 'E3','label');
     end
 end
 
@@ -76,13 +91,14 @@ for ii = 1:length(c3_array)
     saveas(f,strcat('plots/highschool_degree_eff_c3=',num2str(round(c3,2)),'.eps'));
 
     %trim  nodes with highest degrees
-    keepIDs = (degree_eff< max(degree_eff)*1.5);
+    keepIDs = (degree_eff > quantile(degree_eff,0.02))&(degree_eff< quantile(degree_eff,0.98));
     W2 = W2(keepIDs, keepIDs);
     T3 = T3(keepIDs, keepIDs, keepIDs);
     W3 = sum(T3, 3);
     cluster_input = cluster_input(keepIDs);
     idx_rand = idx_rand_in(keepIDs);
     [~, idx_reverse] = sort(idx_rand);
+    label = label(keepIDs,1);
 
     %check degree distribution again
     degree_eff = sum(c2*W2 + c3*W3, 2);
@@ -92,7 +108,7 @@ for ii = 1:length(c3_array)
 %}
     
     %estimate embedding using linear spectral clustering
-    [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false", 3);
+    [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false", n_eig); %number of eigen vectors
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, "false");
                 
     

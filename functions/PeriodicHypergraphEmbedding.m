@@ -41,6 +41,6 @@ L = c2*L2 + c3*L3;
 
 
 % return embedding
-x_est =  angle(V(:,3)+1i*V(:,2));
+x_est =  angle(V(:,2)+1i*V(:,1));
 
 end

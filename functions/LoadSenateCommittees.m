@@ -1,7 +1,7 @@
-function [W2, W3, T3, E2, E3] = LoadSenateBill()
+function [W2, W3, T3, E2, E3] = LoadSenateCommittees()
 
 
-n = 294;
+n = 282;
 E2 = []; % edge list
 W2 = zeros(n); % 2nd order adjacency matrix  
 
@@ -12,12 +12,12 @@ T3 = zeros(n,n,n);
 
 %read hyper edges in a cell array
 
-fid = fopen('raw_data/senate-bills/hyperedges-senate-bills.txt');
+fid = fopen('raw_data/senate-committees/hyperedges-senate-committees.txt');
 line1 = fgetl(fid);
 res=line1;
 while ischar(line1)
-    line1 = fgetl(fid);
-    res = char(res,line1);
+line1 = fgetl(fid);
+res = char(res,line1);
 end
 fclose(fid);
 
