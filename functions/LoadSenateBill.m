@@ -47,7 +47,7 @@ for k=1:size(res,1)
       
       
       W2(E{k}(1),E{k}(2))=1; %only fill uppder triangle
-      W3(E{k}(1),E{k}(2))= W3(E{k}(2),E{k}(2))+1;
+      W3(E{k}(1),E{k}(2))= W3(E{k}(1),E{k}(2))+1;
       W3(E{k}(1),E{k}(3))= W3(E{k}(1),E{k}(3))+1;
       W3(E{k}(2),E{k}(3))= W3(E{k}(2),E{k}(3))+1;
   end

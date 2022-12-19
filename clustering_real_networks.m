@@ -77,12 +77,12 @@ triangle_density = 6*n_triangle/(n_nodes*(n_nodes-1)*(n_nodes-2));
 n = size(W2,2);
 cluster_input = table2array(label);
 %shuffle input adjacency matrix
-%idx_rand_in = randperm(n);% shuffle the nodes
+idx_rand_in = randperm(n);% shuffle the nodes
 %[~, idx_reverse] = sort(idx_rand_in);
-%W2 = W2(idx_rand_in,idx_rand_in);
-%T3 = T3(idx_rand_in, idx_rand_in, idx_rand_in);
-%W3 = sum(T3, 3);
-%cluster_input = cluster_input(idx_rand_in);
+W2 = W2(idx_rand_in,idx_rand_in);
+T3 = T3(idx_rand_in, idx_rand_in, idx_rand_in);
+W3 = sum(T3, 3);
+cluster_input = cluster_input(idx_rand_in);
 
 for ii = 1:length(c3_array)
     c3 = c3_array(ii);
