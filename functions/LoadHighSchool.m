@@ -9,7 +9,7 @@ W3 = zeros(n); % 2nd order adjacency matrix
 T3 = zeros(n,n,n);
 
 %read hyperedges in a cell array
-fid = fopen('raw_data/highschool.txt');
+fid = fopen('raw_data/hyperedges-contact-high-school.txt');
 line1 = fgetl(fid);
 res=line1;
 
