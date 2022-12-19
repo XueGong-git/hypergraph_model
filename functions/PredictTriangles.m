@@ -9,7 +9,7 @@
 %
 
 
-function [AUC_triangle_lin, AUC_triangle_geo_shuffle] = PredictTriangles(data_name, train_ratio, c3_array, gamma_array, trim)
+function [AUC_triangle_lin, AUC_triangle_geo_shuffle] = PredictTriangles(data_name, train_ratio, c3_array, gamma_array, trim, n_eig)
 
 
 c2 = 1; % weight of diadic edge
@@ -76,7 +76,8 @@ if trim == "true" % trim off nodes with high or low degree
     degree_eff = sum(train.W2 + train.W3, 2);
 
     % trim  nodes with highest degrees
-    keepIDs = (degree_eff > quantile(degree_eff,0.02))&(degree_eff< quantile(degree_eff,0.98));
+    keepIDs = (degree_eff > quantile(degree_eff,0.02));
+    %keepIDs = (degree_eff > quantile(degree_eff,0.02))&(degree_eff< quantile(degree_eff,0.98));
     W2 = train.W2(keepIDs, keepIDs);
     T3 = train.T3(keepIDs, keepIDs, keepIDs);
     W3 = sum(T3, 3);
@@ -123,7 +124,7 @@ for ii = 1:length(c3_array)
     c3 = c3_array(ii);
     
     %estimate embedding using linear spectral clustering 
-    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", 1); % don't normalize
+    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", n_eig); 
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2_in, W3_in, c2, c3, "false");
     
     %calculate eta
@@ -316,7 +317,8 @@ ax = gca;
 set(gca,'fontsize',20)
 exportgraphics(ax,strcat('plots/ROC_comparison_', data_name,'_train_',num2str(round(train_ratio,2)),'.eps'),'Resolution',300) 
 hold off
-save(strcat("results/AUC_parameters_",data_name, "_train=", num2str(train_ratio), '.mat'), 'c3_array', 'gamma_array', 'gamma_max_periodic', 'max_c3_lin', 'max_gamma_lin', 'gamma_max_linear', 'max_c3_per', 'max_gamma_per');
+save(strcat("results/AUC_parameters_",data_name, "_train=", num2str(train_ratio), '.mat'), 'c3_array', 'gamma_array', 'gamma_max_periodic', 'max_c3_lin', 'max_gamma_lin', ...
+    'max_lnP_linear', 'max_lnP_periodic','gamma_max_linear', 'max_c3_per', 'max_gamma_per');
 
 T = table(AUC_triangle_rand, AUC_triangle_lin, AUC_triangle_per, AUC_triangle_arith, AUC_triangle_arith_shuffle, AUC_triangle_geo, AUC_triangle_geo_shuffle, ...
     AUC_triangle_harm,AUC_triangle_harm_shuffle);

@@ -36,7 +36,7 @@ L = c2*L2 + c3*L3;
 
 % solve eigenvectors
 [V, lambda] = eigs(L,size(L,1),'smallestabs'); % all eigenvectors ranging from smallest eigenvalue to largest eigenvalue
-start_idx = find(diag(lambda)>=0.01,1);
+start_idx = find(diag(lambda)>=0.01,1); % find the first non-trivial eigenvector
 x_est = V(:,start_idx:start_idx+n_vec-1);
 
 end

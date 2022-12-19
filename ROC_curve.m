@@ -17,6 +17,7 @@ c3_array = 1.1; % weight of triadic edge
 gamma_array = 1; % gamma for likelihood plot
 %data_name = "contact-high-school";
 data_name = "contact-primary-school";
+n_eig = 3; %it used to be 3
 train_ratio = 0.2;
 train_file = strcat('processed_data/', data_name,'_train_', num2str(train_ratio),'.mat');
 test_file = strcat('processed_data/', data_name,'_test_',num2str(1-train_ratio),'.mat');
@@ -118,7 +119,7 @@ for ii = 1:length(c3_array)
     norm_eta = c2*n_edge + c3*n_triangle;
     
     %estimate embedding using linear spectral clustering 
-    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", 3); %  3 eigenvectors
+    [x_est_linear] = LinearHypergraphEmbedding(W2_in, W3_in, c2, c3, "false", n_eig); %  3 eigenvectors
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2_in, W3_in, c2, c3, "false");
     
     %calculate eta

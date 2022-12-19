@@ -9,11 +9,11 @@ tic
 
 
 c2 = 1; % weight of simple edge
-c3_array = 0:0.5:10;
-gamma_array = 0:2:50; % gamma for likelihood plot
+c3_array = 0:0.2:2;
+gamma_array = 0:1000:10000; % gamma for likelihood plot
+data_type = "highschool";
+%data_type = "primaryschool";
 %data_type = "senate-committees";
-%data_type = "highschool";
-data_type = "primaryschool";
 rand_linear = [];
 rand_periodic = [];
 max_lnP_linear = [];
@@ -25,8 +25,9 @@ lnP_periodic = zeros(length(c3_array),length(gamma_array));
 filename = strcat(data_type,'.mat');
 
 if data_type == "highschool"
+    trim = "false";
     K = 9;
-    n_eig = 1;
+    n_eig = 3;
     if isfile(filename)
         load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
     else
@@ -35,8 +36,9 @@ if data_type == "highschool"
         save('highschool','W2', 'W3', 'T3', 'E2', 'E3','label');
     end
 elseif data_type == "primaryschool"
+    trim = "false";
     K = 11;
-    n_eig = 1;
+    n_eig = 4;
     if isfile(filename)
         load(filename,'W2', 'W3', 'T3', 'E2', 'E3', 'label')
     else
@@ -45,6 +47,7 @@ elseif data_type == "primaryschool"
         save('primaryschool','W2', 'W3', 'T3', 'E2', 'E3','label');
     end
 elseif data_type == "senate_bill"
+    trim = "true";
     K = 2;
     n_eig = 1;
     if isfile(filename)
@@ -74,11 +77,12 @@ triangle_density = 6*n_triangle/(n_nodes*(n_nodes-1)*(n_nodes-2));
 n = size(W2,2);
 cluster_input = table2array(label);
 %shuffle input adjacency matrix
-idx_rand_in = randperm(n);% shuffle the nodes
-[~, idx_reverse] = sort(idx_rand_in);
-W2 = W2(idx_rand_in,idx_rand_in);
-T3 = T3(idx_rand_in, idx_rand_in, idx_rand_in);
-cluster_input = cluster_input(idx_rand_in);
+%idx_rand_in = randperm(n);% shuffle the nodes
+%[~, idx_reverse] = sort(idx_rand_in);
+%W2 = W2(idx_rand_in,idx_rand_in);
+%T3 = T3(idx_rand_in, idx_rand_in, idx_rand_in);
+%W3 = sum(T3, 3);
+%cluster_input = cluster_input(idx_rand_in);
 
 for ii = 1:length(c3_array)
     c3 = c3_array(ii);
@@ -91,22 +95,22 @@ for ii = 1:length(c3_array)
     saveas(f,strcat('plots/highschool_degree_eff_c3=',num2str(round(c3,2)),'.eps'));
 
     %trim  nodes with highest degrees
-    keepIDs = (degree_eff > quantile(degree_eff,0.02))&(degree_eff< quantile(degree_eff,0.98));
-    W2 = W2(keepIDs, keepIDs);
-    T3 = T3(keepIDs, keepIDs, keepIDs);
-    W3 = sum(T3, 3);
-    cluster_input = cluster_input(keepIDs);
-    idx_rand = idx_rand_in(keepIDs);
-    [~, idx_reverse] = sort(idx_rand);
-    label = label(keepIDs,1);
+    if trim == "true"
+        keepIDs = (degree_eff > quantile(degree_eff,0.02));
+        W2 = W2(keepIDs, keepIDs);
+        T3 = T3(keepIDs, keepIDs, keepIDs);
+        W3 = sum(T3, 3);
+        cluster_input = cluster_input(keepIDs);
+        %idx_rand = idx_rand_in(keepIDs);
+        %[~, idx_reverse] = sort(idx_rand);
+        %label = label(keepIDs,1);
 
-    %check degree distribution again
-    degree_eff = sum(c2*W2 + c3*W3, 2);
-    f=figure;
-    histogram(degree_eff);
-    saveas(f,strcat('plots/highschool_degree_eff_trim_c3=',num2str(round(c3,2)),'_c2_',num2str(round(c2,2)),'.eps'));
-%}
-    
+        %check degree distribution again
+        degree_eff = sum(c2*W2 + c3*W3, 2);
+        f=figure;
+        histogram(degree_eff);
+        saveas(f,strcat('plots/highschool_degree_eff_trim_c3=',num2str(round(c3,2)),'_c2_',num2str(round(c2,2)),'.eps'));
+    end
     %estimate embedding using linear spectral clustering
     [x_est_linear] = LinearHypergraphEmbedding(W2, W3, c2, c3, "false", n_eig); %number of eigen vectors
     [x_est_periodic] = PeriodicHypergraphEmbedding(W2, W3, c2, c3, "false");
@@ -118,7 +122,7 @@ for ii = 1:length(c3_array)
 
     %scale estimation
     x_est_linear = x_est_linear*sqrt(eta_periodic_est/eta_linear_est);  
-    %x_est_periodic = x_est_periodic*sqrt(norm_eta/eta_periodic_est);  
+    %x_est_periodic = x_est_periodic*sqrt(norm_eta/eta_periodic_est); 
 
     [~, eta_linear_scaled] = CalculateModelLikelihood(x_est_linear, W2, T3, c2, c3, 2, "linear");
     %[~, eta_periodic_scaled] = CalculateModelLikelihood(x_est_periodic, W2, T3, c2, c3, 2, "periodic");
@@ -208,8 +212,8 @@ end
 save(strcat('test_',data_type,'.mat'), 'rand_linear', ...
     'rand_periodic', 'x_est_linear', 'x_est_periodic', 'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density')
 
-load(strcat('test_',data_type,'.mat'), 'rand_linear', ...
-    'rand_periodic', 'x_est_linear', 'x_est_periodic', 'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density')
+%load(strcat('test_',data_type,'.mat'), 'rand_linear', ...
+ %   'rand_periodic', 'x_est_linear', 'x_est_periodic', 'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density')
 
 
 
@@ -266,11 +270,11 @@ exportgraphics(ax,strcat('plots/lnP_periodic_', data_type,'_c2_',num2str(round(c
  
 
 
-%save(strcat(data_type,'_trim_clustering.mat'), 'rand_linear', ...
-%    'rand_periodic',  'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density', ...
-%      'n','K','c2','gamma_array')
+save(strcat('results/',data_type,'_clustering.mat'), 'rand_linear', ...
+    'rand_periodic',  'max_lnP_linear', 'max_lnP_periodic', 'edge_density', 'triangle_density', ...
+      'n','K','c2', 'c3_array','gamma_array', 'trim', 'n_eig')
 
 
 toc
-load handel
+load chirp.mat
 sound(y,Fs)
