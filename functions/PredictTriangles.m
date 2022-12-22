@@ -73,29 +73,30 @@ T3_in = train.T3;
 
 if trim == "true" % trim off nodes with high or low degree
     % check degree distribution
-    degree_eff = sum(train.W2 + train.W3, 2);
+    degree_eff = sum(W2_in + W3_in, 2);
 
     % trim  nodes with highest degrees
     keepIDs = (degree_eff > quantile(degree_eff,0.02));
     %keepIDs = (degree_eff > quantile(degree_eff,0.02))&(degree_eff< quantile(degree_eff,0.98));
-    W2 = train.W2(keepIDs, keepIDs);
-    T3 = train.T3(keepIDs, keepIDs, keepIDs);
-    W3 = sum(T3, 3);
+    W2_in = W2_in(keepIDs, keepIDs);
+    T3_in = T3_in(keepIDs, keepIDs, keepIDs);
+    W3_in = sum(T3_in, 3);
 
-    % extract largest connected component
-    [idx, W2_in, W3_in, T3_in] = MaxConnectedSubgraph(1, 1, W2, W3, T3);    
-
+   
     % trim test data accordingly
     test.W2 = test.W2(keepIDs, keepIDs);
     test.T3 = test.T3(keepIDs, keepIDs, keepIDs);
     test.W3 = sum(test.T3, 3);
     
-    % get only the nodes in the connected component in the training data
-    test.W2 = test.W2(idx,idx);
-    test.W3 = test.W3(idx,idx);
-    test.T3 = test.T3(idx,idx, idx); 
-    
 end
+
+% extract largest connected component
+[idx, W2_in, W3_in, T3_in] = MaxConnectedSubgraph(1, 1, W2_in, W3_in, T3_in);    
+
+% get only the nodes in the connected component in the training data
+test.W2 = test.W2(idx,idx);
+test.W3 = test.W3(idx,idx);
+test.T3 = test.T3(idx,idx, idx); 
 
 % check number of nodes and edge/triangle density
 n_nodes = size(train.W2,2);
@@ -133,6 +134,7 @@ for ii = 1:length(c3_array)
 
     %scale estimation
     x_est_linear = x_est_linear*sqrt(eta_periodic_est/eta_linear_est);  
+    
     %x_est_periodic = x_est_periodic*sqrt(norm_eta/eta_periodic_est);  
     [~, eta_linear_scaled, ~] = CalculateModelLikelihood(x_est_linear, W2_in, T3_in, c2, c3, 2, "linear");
     %[~, eta_periodic_scaled, ~] = CalculateModelLikelihood(x_est_linear, W2_in, T3_in, c2, c3, 2, "linear");
