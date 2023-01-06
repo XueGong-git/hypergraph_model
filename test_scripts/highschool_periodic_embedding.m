@@ -1,14 +1,4 @@
-% generate_linear_hypergraph  Generate unweighted hypergraph that shows a linear
-% structure
-%
-% INPUTS
-% 
-% - n   Number of nodes
-% - x   Node embedding
-% - gamma   Decay parameter for the linear hypergraph model
-%
-% OUTPUTS
-% - (A2, A3)       Hypergraph -- with a matrix + a tensor
+
 tic
 clear
 
